@@ -92,8 +92,6 @@ yarn build
 yarn start
 ```
 
----
-
 ## 💠 Environment Variables
 
 Create a `.env` file in the project root with the following values:
