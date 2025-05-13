@@ -45,6 +45,33 @@ export function decodeCredit(sia: Sia): Credit {
   };
 }
 
+export interface Refund {
+  uuid: Uint8Array | Buffer;
+  amount: number;
+  currency: string;
+  user: Uint8Array | Buffer;
+  subnet: Signature;
+}
+
+export function encodeRefund(sia: Sia, refund: Refund): Sia {
+  sia.addByteArray8(refund.uuid);
+  sia.addUInt64(refund.amount);
+  sia.addString8(refund.currency);
+  sia.addByteArrayN(refund.user);
+  encodeSignature(sia, refund.subnet);
+  return sia;
+}
+
+export function decodeRefund(sia: Sia): Refund {
+  return {
+    uuid: sia.readByteArray8(),
+    amount: sia.readUInt64(),
+    currency: sia.readString8(),
+    user: sia.readByteArrayN(32),
+    subnet: decodeSignature(sia),
+  };
+}
+
 export interface Debit {
   uuid: Uint8Array | Buffer;
   amount: number;
@@ -68,24 +95,6 @@ export function decodeDebit(sia: Sia): Debit {
     amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: decodeSignature(sia),
-    subnet: decodeSignature(sia),
-  };
-}
-
-export interface Refund {
-  uuid: Uint8Array | Buffer;
-  subnet: Signature;
-}
-
-export function encodeRefund(sia: Sia, refund: Refund): Sia {
-  sia.addByteArray8(refund.uuid);
-  encodeSignature(sia, refund.subnet);
-  return sia;
-}
-
-export function decodeRefund(sia: Sia): Refund {
-  return {
-    uuid: sia.readByteArray8(),
     subnet: decodeSignature(sia),
   };
 }

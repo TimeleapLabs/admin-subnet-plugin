@@ -21,6 +21,20 @@ schema Credit {
 }
 
 /**
+@dev A refund request.
+
+Refunds the `amount` to user's account in `currency`.
+Fails if the uuid is not an existing credit request.
+*/
+schema Refund {
+  uuid      byte8
+  amount    uint64
+  currency  string8(encoding = "ascii")
+  user      byteN(length = 32)
+  subnet    Signature
+}
+
+/**
 @dev A debit request. Should contain the hash
 of the user request and their signature.
 
@@ -34,15 +48,6 @@ schema Debit {
   amount    uint64
   currency  string8(encoding = "ascii")
   user      Signature
-  subnet    Signature
-}
-
-/**
-@dev A refund request.
-Fails if the uuid is not found.
-*/
-schema Refund {
-  uuid      byte8
   subnet    Signature
 }
 

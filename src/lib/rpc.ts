@@ -1,4 +1,4 @@
-import { Credit, Debit, Signature } from "../model/accounting.js";
+import { Credit, Debit, Refund, Signature } from "../model/accounting.js";
 import {
   getClient,
   incUserBalance,
@@ -7,6 +7,7 @@ import {
   safeDecUserBalance,
   addDelegation,
   removeDelegation,
+  safeRecordRefund,
 } from "./db.js";
 
 /**
@@ -61,6 +62,35 @@ export const debit = async (debit: Debit) => {
       );
 
       await recordDebit(debit, session);
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+/**
+ * @description Refund user balance
+ * @param refund Refund transaction
+ * @notes This function is used to refund a user's balance in the database.
+ *        It uses a MongoDB transaction to ensure that both the balance update
+ *        and the transaction record are atomic. If either operation fails,
+ *        the entire transaction is rolled back.
+ */
+export const refund = async (refund: Refund) => {
+  const client = await getClient();
+  const session = client.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      await incUserBalance(
+        refund.user,
+        refund.currency,
+        refund.subnet.signer,
+        refund.amount,
+        session,
+      );
+
+      await safeRecordRefund(refund, session);
     });
   } finally {
     session.endSession();

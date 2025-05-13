@@ -10,8 +10,12 @@ import type {
   UserDocument,
   DelegateDocument,
   Delegate,
+  DebitTransaction,
+  CreditTransaction,
+  RefundTransaction,
+  Transaction,
 } from "../types/db.js";
-import type { Credit, Debit, Signature } from "../model/accounting.js";
+import type { Credit, Debit, Refund, Signature } from "../model/accounting.js";
 import type { Maybe } from "../types/helpers.js";
 
 let client: MongoClient | null = null;
@@ -131,10 +135,10 @@ export const safeDecUserBalance = async (
 export const recordCredit = async (
   credit: Credit,
   session: Maybe<ClientSession> = undefined,
-): Promise<InsertOneResult<Credit>> => {
+): Promise<InsertOneResult<CreditTransaction>> => {
   const db = await getDb();
-  const collection = db.collection<Credit>("transactions");
-  return await collection.insertOne(credit, { session });
+  const collection = db.collection<CreditTransaction>("transactions");
+  return await collection.insertOne({ ...credit, type: "credit" }, { session });
 };
 
 /**
@@ -146,10 +150,41 @@ export const recordCredit = async (
 export const recordDebit = async (
   debit: Debit,
   session: Maybe<ClientSession> = undefined,
-): Promise<InsertOneResult<Debit>> => {
+): Promise<InsertOneResult<DebitTransaction>> => {
   const db = await getDb();
-  const collection = db.collection<Debit>("transactions");
-  return await collection.insertOne(debit, { session });
+  const collection = db.collection<DebitTransaction>("transactions");
+  return await collection.insertOne({ ...debit, type: "debit" }, { session });
+};
+
+/**
+ * @description Record a refund transaction
+ * @param refund Refund transaction
+ * @param session MongoDB session (optional)
+ * @param check Check if credit transaction exists (default: true)
+ * @returns Insert result
+ */
+export const safeRecordRefund = async (
+  refund: Refund,
+  session: Maybe<ClientSession> = undefined,
+  check: boolean = true,
+): Promise<InsertOneResult<RefundTransaction>> => {
+  const db = await getDb();
+  const collection = db.collection<Transaction>("transactions");
+
+  const credit = await collection.findOne(
+    {
+      uuid: refund.uuid,
+      "subnet.signer": refund.subnet.signer,
+      type: "credit",
+    },
+    { session },
+  );
+
+  if (check && !credit) {
+    throw new Error("Credit transaction not found");
+  }
+
+  return await collection.insertOne({ ...refund, type: "refund" }, { session });
 };
 
 /**

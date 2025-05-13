@@ -1,5 +1,5 @@
 import { WithId } from "mongodb";
-import type { Signature } from "../model/accounting.js";
+import type { Signature, Debit, Credit, Refund } from "../model/accounting.js";
 
 export type User = {
   user: Uint8Array;
@@ -16,3 +16,20 @@ export type Delegate = {
 };
 
 export type DelegateDocument = WithId<Delegate>;
+
+export interface DebitTransaction extends Debit {
+  type: "debit";
+}
+
+export interface CreditTransaction extends Credit {
+  type: "credit";
+}
+
+export interface RefundTransaction extends Refund {
+  type: "refund";
+}
+
+export type Transaction =
+  | DebitTransaction
+  | CreditTransaction
+  | RefundTransaction;

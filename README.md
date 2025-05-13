@@ -52,6 +52,9 @@ Reverses a previously submitted `Debit`.
 ```ts
 schema Refund {
   uuid      byte8
+  fee       uint64
+  currency  string8(encoding = "ascii")
+  user      byteN(length = 32)
   subnet    Signature
 }
 ```
