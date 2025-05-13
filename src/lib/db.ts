@@ -12,6 +12,7 @@ import type {
   Delegate,
 } from "../types/db.js";
 import type { Credit, Debit, Signature } from "../model/accounting.js";
+import type { Maybe } from "../types/helpers.js";
 
 let client: MongoClient | null = null;
 
@@ -20,7 +21,9 @@ let client: MongoClient | null = null;
  * @param uri MongoDB connection string (default: process.env.MONGODB_URI)
  * @returns MongoDB client
  */
-const connect = async (uri: string = process.env.MONGODB_URI ?? "") => {
+export const getClient = async (
+  uri: string = process.env.MONGODB_URI ?? "",
+) => {
   if (!client) {
     client = new MongoClient(uri);
     await client.connect();
@@ -36,7 +39,7 @@ const connect = async (uri: string = process.env.MONGODB_URI ?? "") => {
 const getDb = async (
   dbName: string = process.env.MONGODB_DB_NAME ?? "timeleap",
 ) => {
-  const client = await connect();
+  const client = await getClient();
   return client.db(dbName);
 };
 
@@ -52,7 +55,7 @@ export const getUserBalance = async (
   user: Uint8Array,
   currency: string,
   subnet: Uint8Array,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
 ): Promise<UserDocument | null> => {
   const db = await getDb();
   const collection = db.collection<User>("users");
@@ -73,7 +76,7 @@ export const incUserBalance = async (
   currency: string,
   subnet: Uint8Array,
   amount: number,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
 ): Promise<UpdateResult<User>> => {
   const db = await getDb();
   const collection = db.collection<User>("users");
@@ -100,7 +103,7 @@ export const safeDecUserBalance = async (
   currency: string,
   subnet: Uint8Array,
   amount: number,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
   check: boolean = true,
 ): Promise<UpdateResult<User>> => {
   const db = await getDb();
@@ -127,7 +130,7 @@ export const safeDecUserBalance = async (
  */
 export const recordCredit = async (
   credit: Credit,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<Credit>> => {
   const db = await getDb();
   const collection = db.collection<Credit>("transactions");
@@ -142,7 +145,7 @@ export const recordCredit = async (
  */
 export const recordDebit = async (
   debit: Debit,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<Debit>> => {
   const db = await getDb();
   const collection = db.collection<Debit>("transactions");
@@ -157,7 +160,7 @@ export const recordDebit = async (
  */
 export const getDelegation = async (
   user: Uint8Array,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
 ): Promise<DelegateDocument | null> => {
   const db = await getDb();
   const collection = db.collection<Delegate>("delegations");
@@ -173,10 +176,10 @@ export const getDelegation = async (
  * @notes You MUST define a unique index on the user field in the delegations collection
  *        to ensure that each user can only have one delegation.
  */
-export const safeAddDelegation = async (
+export const addDelegation = async (
   user: Uint8Array,
   subnet: Signature,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<Delegate>> => {
   const db = await getDb();
   const collection = db.collection<Delegate>("delegations");
@@ -191,7 +194,7 @@ export const safeAddDelegation = async (
  */
 export const removeDelegation = async (
   user: Uint8Array,
-  session: ClientSession | undefined,
+  session: Maybe<ClientSession> = undefined,
 ): Promise<DeleteResult> => {
   const db = await getDb();
   const collection = db.collection<Delegate>("delegations");
