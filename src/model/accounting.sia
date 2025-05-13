@@ -9,12 +9,12 @@ schema Signature {
 /**
 @dev A credit request.
 
-Adds the `fee` to user's account in `currency`.
+Adds the `amount` to user's account in `currency`.
 Fails if the uuid is not unique.
 */
 schema Credit {
   uuid      byte8
-  fee       uint64
+  amount    uint64
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
   subnet    Signature
@@ -24,14 +24,14 @@ schema Credit {
 @dev A debit request. Should contain the hash
 of the user request and their signature.
 
-Debits the `fee` from user's account in `currency`,
+Debits the `amount` from user's account in `currency`,
 fails if the user balance drops below zero.
 
 Fails if the uuid is not unique.
 */
 schema Debit {
   uuid      byte8
-  fee       uint64
+  amount    uint64
   currency  string8(encoding = "ascii")
   user      Signature
   subnet    Signature
