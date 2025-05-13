@@ -20,7 +20,7 @@ export function decodeSignature(sia: Sia): Signature {
 
 export interface Credit {
   uuid: Uint8Array | Buffer;
-  fee: number;
+  amount: number;
   currency: string;
   user: Uint8Array | Buffer;
   subnet: Signature;
@@ -28,7 +28,7 @@ export interface Credit {
 
 export function encodeCredit(sia: Sia, credit: Credit): Sia {
   sia.addByteArray8(credit.uuid);
-  sia.addUInt64(credit.fee);
+  sia.addUInt64(credit.amount);
   sia.addString8(credit.currency);
   sia.addByteArrayN(credit.user);
   encodeSignature(sia, credit.subnet);
@@ -38,7 +38,7 @@ export function encodeCredit(sia: Sia, credit: Credit): Sia {
 export function decodeCredit(sia: Sia): Credit {
   return {
     uuid: sia.readByteArray8(),
-    fee: sia.readUInt64(),
+    amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: sia.readByteArrayN(32),
     subnet: decodeSignature(sia),
@@ -47,7 +47,7 @@ export function decodeCredit(sia: Sia): Credit {
 
 export interface Debit {
   uuid: Uint8Array | Buffer;
-  fee: number;
+  amount: number;
   currency: string;
   user: Signature;
   subnet: Signature;
@@ -55,7 +55,7 @@ export interface Debit {
 
 export function encodeDebit(sia: Sia, debit: Debit): Sia {
   sia.addByteArray8(debit.uuid);
-  sia.addUInt64(debit.fee);
+  sia.addUInt64(debit.amount);
   sia.addString8(debit.currency);
   encodeSignature(sia, debit.user);
   encodeSignature(sia, debit.subnet);
@@ -65,7 +65,7 @@ export function encodeDebit(sia: Sia, debit: Debit): Sia {
 export function decodeDebit(sia: Sia): Debit {
   return {
     uuid: sia.readByteArray8(),
-    fee: sia.readUInt64(),
+    amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: decodeSignature(sia),
     subnet: decodeSignature(sia),
