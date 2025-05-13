@@ -81,7 +81,7 @@ schema UnAuthorize {
 - Allows distributed signing across multiple trusted operators.
 - Prevents unauthorized access to accounting APIs.
 
-## ⚙️ Usage
+## 💻 Usage
 
 ### 🔧 Build
 
@@ -95,7 +95,7 @@ yarn build
 yarn start
 ```
 
-## 💠 Environment Variables
+## ⚙️ Environment Variables
 
 Create a `.env` file in the project root with the following values:
 

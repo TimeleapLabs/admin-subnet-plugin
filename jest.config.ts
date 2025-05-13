@@ -9,4 +9,5 @@ export default {
     "^@/(.*)\\.js$": "<rootDir>/src/$1.ts",
     "^@lib/(.*)\\.js$": "<rootDir>/src/lib/$1.ts",
   },
+  testTimeout: 30000,
 };

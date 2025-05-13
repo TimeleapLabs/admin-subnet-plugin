@@ -8,7 +8,9 @@ import {
   addDelegation,
   removeDelegation,
   safeRecordRefund,
-} from "./db.js";
+  getDelegation,
+} from "@lib/db.js";
+import { equal } from "@lib/binary.js";
 
 /**
  * @description Credit user balance
@@ -113,4 +115,20 @@ export const authorize = async (user: Uint8Array, subnet: Signature) =>
  * @notes This function is used to remove a user's authorization for a specific subnet.
  *        It removes the delegation entry from the database.
  */
-export const unauthorize = async (user: Uint8Array) => removeDelegation(user);
+export const unauthorize = async (user: Uint8Array, subnet: Signature) => {
+  const client = await getClient();
+  const session = client.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      const delegation = await getDelegation(user, session);
+      if (!delegation || !equal(delegation.subnet.signer, subnet.signer)) {
+        throw new Error("Delegation not found or subnet mismatch");
+      }
+
+      await removeDelegation(user, session);
+    });
+  } finally {
+    session.endSession();
+  }
+};

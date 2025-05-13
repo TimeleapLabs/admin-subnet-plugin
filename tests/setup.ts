@@ -1,20 +1,15 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { credit, debit, refund, authorize, unauthorize } from "@lib/rpc.js";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 import { getClient } from "@lib/db.js";
 
-let mongod: MongoMemoryServer;
+let mongod: MongoMemoryReplSet;
 let uri: string;
 
 beforeAll(async () => {
-  mongod = await MongoMemoryServer.create();
+  mongod = await MongoMemoryReplSet.create({ replSet: { count: 3 } });
   uri = mongod.getUri();
 
   process.env.MONGODB_URI = uri;
   process.env.MONGODB_DB_NAME = "testdb";
-
-  // Force client reinitialization if using module-level `client` cache
-  const client = await getClient(uri);
-  await client.db().dropDatabase();
 });
 
 afterAll(async () => {
