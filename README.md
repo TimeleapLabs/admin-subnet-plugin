@@ -102,9 +102,13 @@ WORKER_PUBLIC_KEY=          # Public key of the Timeleap RPC runtime
 MONGODB_URI=                # MongoDB connection string for balance and log storage
 ```
 
-## ⚠️ Important Notes
+## 🥭 Indexes
 
-- You must ensure your `delegations` collection has a unique index on the user field.
+You need the following indexes in MongoDB:
+
+- The `delegations` collection must have a unique index on the `user` field.
+- The `transactions` collection must have a unique composite index on the `user`, `uuid`, `subnet` and `type` fields.
+- The `users` collection must have a unique composite index on `user`, `subnet`, and `currency` fields.
 
 ## 🧼 Code Style
 
