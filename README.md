@@ -102,6 +102,10 @@ WORKER_PUBLIC_KEY=          # Public key of the Timeleap RPC runtime
 MONGODB_URI=                # MongoDB connection string for balance and log storage
 ```
 
+## ⚠️ Important Notes
+
+- You must ensure your `delegations` collection has a unique index on the user field.
+
 ## 🧼 Code Style
 
 This project uses:
