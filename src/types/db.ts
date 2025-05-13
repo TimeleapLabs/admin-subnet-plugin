@@ -1,5 +1,5 @@
 import { WithId } from "mongodb";
-import type { Signature, Debit, Credit, Refund } from "../model/accounting.js";
+import type { Signature, Debit, Credit, Refund } from "@model/accounting.js";
 
 export type User = {
   user: Uint8Array;

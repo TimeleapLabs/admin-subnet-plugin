@@ -14,9 +14,9 @@ import type {
   CreditTransaction,
   RefundTransaction,
   Transaction,
-} from "../types/db.js";
-import type { Credit, Debit, Refund, Signature } from "../model/accounting.js";
-import type { Maybe } from "../types/helpers.js";
+} from "@type/db.js";
+import type { Credit, Debit, Refund, Signature } from "@model/accounting.js";
+import type { Maybe } from "@type/helpers.js";
 
 let client: MongoClient | null = null;
 

@@ -1,4 +1,4 @@
-import { Credit, Debit, Refund, Signature } from "../model/accounting.js";
+import { Credit, Debit, Refund, Signature } from "@model/accounting.js";
 import {
   getClient,
   incUserBalance,
