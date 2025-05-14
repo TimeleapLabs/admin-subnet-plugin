@@ -176,6 +176,8 @@ export const safeRecordRefund = async (
       uuid: refund.uuid,
       "subnet.signer": refund.subnet.signer,
       type: "credit",
+      amount: { $gte: refund.amount },
+      currency: refund.currency,
     },
     { session },
   );

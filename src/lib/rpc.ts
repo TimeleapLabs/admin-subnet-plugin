@@ -84,6 +84,8 @@ export const refund = async (refund: Refund) => {
 
   try {
     await session.withTransaction(async () => {
+      await safeRecordRefund(refund, session);
+
       await incUserBalance(
         refund.user,
         refund.currency,
@@ -91,8 +93,6 @@ export const refund = async (refund: Refund) => {
         refund.amount,
         session,
       );
-
-      await safeRecordRefund(refund, session);
     });
   } finally {
     session.endSession();

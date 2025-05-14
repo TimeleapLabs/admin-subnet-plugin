@@ -4,7 +4,7 @@ import { equal } from "@lib/binary.js";
 
 import "./setup.ts";
 
-describe("Subnet adminstration", () => {
+describe("Subnet administration", () => {
   it("should authorize a user for a subnet", async () => {
     const user = new Uint8Array([1, 2, 3]);
     const signer = new Uint8Array([4, 5, 6]);
