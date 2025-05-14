@@ -1,5 +1,5 @@
 {
-  "name": "accounting-subnet-plugin",
+  "name": "admin-subnet-plugin",
   "packageManager": "yarn@4.9.1",
   "dependencies": {
     "@timeleap/client": "^1.3.0",

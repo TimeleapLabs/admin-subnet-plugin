@@ -1,8 +1,8 @@
-# 💳 Timeleap Accounting Subnet Plugin
+# 💳 Timeleap Admin Subnet Plugin
 
-This repository implements the **Accounting Subnet Plugin** for the [Timeleap
+This repository implements the **Admin Subnet Plugin** for the [Timeleap
 Network](https://timeleap.swiss), as specified in
-[TEP-6](https://timeleap.swiss/docs/tep/6). The accounting subnet acts as a
+[TEP-6](https://timeleap.swiss/docs/tep/6). The admin subnet acts as a
 decentralized ledger for fee tracking, user balance management, and
 signature-based billing verification across all subnets.
 
