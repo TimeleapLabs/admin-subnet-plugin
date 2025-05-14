@@ -1,6 +1,5 @@
 import { WebSocketServer } from "ws";
 import { Sia } from "@timeleap/sia";
-import { Uuid25 } from "uuid25";
 import { config } from "dotenv";
 import { Wallet, Identity } from "@timeleap/client";
 

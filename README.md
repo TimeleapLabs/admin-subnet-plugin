@@ -18,10 +18,11 @@ Adds funds to a user's balance in a specified currency.
 ```ts
 schema Credit {
   uuid      byte8
-  fee       uint64
+  amount    uint64
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
-  subnet    Signature
+  subnet    byteN(length = 32)
+  proof     Signature
 }
 ```
 
@@ -35,10 +36,11 @@ Deducts usage fees from a user's balance.
 ```ts
 schema Debit {
   uuid      byte8
-  fee       uint64
+  amount    uint64
   currency  string8(encoding = "ascii")
   user      Signature
-  subnet    Signature
+  subnet    byteN(length = 32)
+  proof     Signature
 }
 ```
 
@@ -47,15 +49,16 @@ schema Debit {
 
 ### 💸 `Refund`
 
-Reverses a previously submitted `Debit`.
+Reverses a previously submitted `Credit`.
 
 ```ts
 schema Refund {
   uuid      byte8
-  fee       uint64
+  amount    uint64
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
-  subnet    Signature
+  subnet    byteN(length = 32)
+  proof     Signature
 }
 ```
 
@@ -68,18 +71,34 @@ Manage signing delegates for a subnet.
 
 ```ts
 schema Authorize {
-  address   byteN(length = 32)
-  subnet    Signature
+  user    byteN(length = 32)
+  subnet  byteN(length = 32)
+  proof   Signature
 }
 
 schema UnAuthorize {
-  address   byteN(length = 32)
-  subnet    Signature
+  user    byteN(length = 32)
+  subnet  byteN(length = 32)
+  proof   Signature
 }
 ```
 
 - Allows distributed signing across multiple trusted operators.
 - Prevents unauthorized access to accounting APIs.
+
+### ✍️ `Signature`
+
+Standard Ed25519 signature schema.
+
+```ts
+schema Signature {
+  signer    byteN(length = 32)
+  signature byteN(length = 64)
+}
+```
+
+- Used for authenticating all schema requests.
+- Ensures requests are tamper-proof and cryptographically verifiable.
 
 ## 💻 Usage
 
@@ -110,8 +129,10 @@ MONGODB_URI=                # MongoDB connection string for balance and log stor
 You need the following indexes in MongoDB:
 
 - The `delegations` collection must have a unique index on the `user` field.
-- The `transactions` collection must have a unique composite index on the `user`, `uuid`, `subnet` and `type` fields.
-- The `users` collection must have a unique composite index on `user`, `subnet`, and `currency` fields.
+- The `transactions` collection must have a unique composite index on the
+  `user`, `uuid`, `subnet` and `type` fields.
+- The `users` collection must have a unique composite index on `user`, `subnet`,
+  and `currency` fields.
 
 ## 🧼 Code Style
 

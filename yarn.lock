@@ -1625,7 +1625,6 @@ __metadata:
     tsx: "npm:^4.19.4"
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.32.1"
-    uuid25: "npm:^0.1.5"
     winston: "npm:^3.17.0"
     ws: "npm:^8.18.2"
   languageName: unknown
@@ -5903,13 +5902,6 @@ __metadata:
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 10c0/41a5bdd214df2f6c3ecf8622745e4a366c4adced864bc3c833739791aeeeb1838119af7daed4ba36428114b5c67dcda034a79c882e97e43c03e66a4dd7389942
-  languageName: node
-  linkType: hard
-
-"uuid25@npm:^0.1.5":
-  version: 0.1.5
-  resolution: "uuid25@npm:0.1.5"
-  checksum: 10c0/11a3c106c70521defc472aca58c49b0ecf689b850c4ff7c75ec6dc214a1b827dd6809ca33fc940f0d6d54ca03515c98bc1d347c08f1e5260d1cf1e6fbeba0690
   languageName: node
   linkType: hard
 
