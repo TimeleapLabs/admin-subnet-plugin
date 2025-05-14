@@ -14,8 +14,17 @@ import type {
   CreditTransaction,
   RefundTransaction,
   Transaction,
+  SubnetDocument,
+  Subnet,
 } from "@type/db.js";
-import type { Credit, Debit, Refund, Signature } from "@model/accounting.js";
+import type {
+  Authorize,
+  Credit,
+  Debit,
+  Refund,
+  Signature,
+  UnAuthorize,
+} from "@model/accounting.js";
 import type { Maybe } from "@type/helpers.js";
 
 let client: MongoClient | null = null;
@@ -138,7 +147,10 @@ export const recordCredit = async (
 ): Promise<InsertOneResult<CreditTransaction>> => {
   const db = await getDb();
   const collection = db.collection<CreditTransaction>("transactions");
-  return await collection.insertOne({ ...credit, type: "credit" }, { session });
+  return await collection.insertOne(
+    { ...credit, type: "credit", createdAt: new Date() },
+    { session },
+  );
 };
 
 /**
@@ -153,7 +165,10 @@ export const recordDebit = async (
 ): Promise<InsertOneResult<DebitTransaction>> => {
   const db = await getDb();
   const collection = db.collection<DebitTransaction>("transactions");
-  return await collection.insertOne({ ...debit, type: "debit" }, { session });
+  return await collection.insertOne(
+    { ...debit, type: "debit", createdAt: new Date() },
+    { session },
+  );
 };
 
 /**
@@ -174,7 +189,7 @@ export const safeRecordRefund = async (
   const credit = await collection.findOne(
     {
       uuid: refund.uuid,
-      "subnet.signer": refund.subnet.signer,
+      subnet: refund.subnet,
       type: "credit",
       amount: { $gte: refund.amount },
       currency: refund.currency,
@@ -186,7 +201,10 @@ export const safeRecordRefund = async (
     throw new Error("Credit transaction not found");
   }
 
-  return await collection.insertOne({ ...refund, type: "refund" }, { session });
+  return await collection.insertOne(
+    { ...refund, type: "refund", createdAt: new Date() },
+    { session },
+  );
 };
 
 /**
@@ -206,34 +224,108 @@ export const getDelegation = async (
 
 /**
  * @description Add a delegation
- * @param user User public key
- * @param subnet Subnet signature
+ * @param authorize Authorize transaction
  * @param session MongoDB session (optional)
  * @returns Insert result
  * @notes You MUST define a unique index on the user field in the delegations collection
  *        to ensure that each user can only have one delegation.
  */
-export const addDelegation = async (
-  user: Uint8Array,
-  subnet: Signature,
+export const addAuthorizeDelegationRecord = async (
+  authorize: Authorize,
   session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<Delegate>> => {
   const db = await getDb();
   const collection = db.collection<Delegate>("delegations");
-  return await collection.insertOne({ user, subnet }, { session });
+  return await collection.insertOne(
+    { ...authorize, type: "authorize", createdAt: new Date() },
+    { session },
+  );
 };
 
 /**
  * @description Remove a delegation
- * @param user User public key
+ * @param unauthorize UnAuthorize transaction
  * @param session MongoDB session (optional)
  * @returns Delete result
  */
-export const removeDelegation = async (
-  user: Uint8Array,
+export const addUnAuthorizeDelegationRecord = async (
+  unauthorize: UnAuthorize,
   session: Maybe<ClientSession> = undefined,
-): Promise<DeleteResult> => {
+): Promise<InsertOneResult<Delegate>> => {
   const db = await getDb();
   const collection = db.collection<Delegate>("delegations");
-  return await collection.deleteOne({ user }, { session });
+  return await collection.insertOne(
+    { ...unauthorize, type: "unauthorize", createdAt: new Date() },
+    { session },
+  );
+};
+
+/**
+ * @description Add a subnet
+ * @param subnet Subnet information
+ * @param session MongoDB session (optional)
+ * @returns Insert result
+ */
+export const addSubnet = async (
+  subnet: Subnet,
+  session: Maybe<ClientSession> = undefined,
+): Promise<InsertOneResult<Subnet>> => {
+  const db = await getDb();
+  const collection = db.collection<Subnet>("subnets");
+  return collection.insertOne(subnet, { session });
+};
+
+/**
+ * @description Get subnet information
+ * @param subnet Subnet signature
+ * @param session MongoDB session (optional)
+ * @returns Subnet document or null if not found
+ */
+export const getSubnet = async (
+  subnet: Uint8Array,
+  session: Maybe<ClientSession> = undefined,
+): Promise<SubnetDocument | null> => {
+  const db = await getDb();
+  const collection = db.collection<Subnet>("subnets");
+  return await collection.findOne({ subnet }, { session });
+};
+
+/**
+ * @description Add a subnet
+ * @param subnet Subnet information
+ * @param session MongoDB session (optional)
+ * @returns Insert result
+ */
+export const addDelegateToSubnet = async (
+  subnet: Uint8Array,
+  user: Uint8Array,
+  session: Maybe<ClientSession> = undefined,
+): Promise<UpdateResult<Subnet>> => {
+  const db = await getDb();
+  const collection = db.collection<Subnet>("subnets");
+  return await collection.updateOne(
+    { subnet },
+    { $addToSet: { delegates: user } },
+    { session },
+  );
+};
+
+/**
+ * @description Remove a subnet
+ * @param subnet Subnet signature
+ * @param session MongoDB session (optional)
+ * @returns Delete result
+ */
+export const removeDelegateFromSubnet = async (
+  subnet: Uint8Array,
+  user: Uint8Array,
+  session: Maybe<ClientSession> = undefined,
+): Promise<UpdateResult<Subnet>> => {
+  const db = await getDb();
+  const collection = db.collection<Subnet>("subnets");
+  return await collection.updateOne(
+    { subnet },
+    { $pull: { delegates: user } },
+    { session },
+  );
 };

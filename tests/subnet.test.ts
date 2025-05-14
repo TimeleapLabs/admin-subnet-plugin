@@ -1,36 +1,52 @@
 import { authorize, unauthorize } from "@lib/rpc.js";
-import { getDelegation } from "@lib/db.js";
+import { getDelegation, getSubnet } from "@lib/db.js";
 import { equal } from "@lib/binary.js";
+import { Authorize, UnAuthorize } from "@model/accounting.js";
 
-import "./setup.ts";
+import { mockSubnet } from "./setup.js";
 
 describe("Subnet administration", () => {
   it("should authorize a user for a subnet", async () => {
-    const user = new Uint8Array([1, 2, 3]);
-    const signer = new Uint8Array([4, 5, 6]);
-    const signature = new Uint8Array([7, 8, 9]);
-    const subnet = { signer, signature };
+    const authorizeRequest: Authorize = {
+      user: new Uint8Array([3, 4, 5]),
+      subnet: mockSubnet.subnet,
+      proof: {
+        signer: mockSubnet.delegates[0],
+        signature: new Uint8Array([1, 2, 3]),
+      },
+    };
 
-    await authorize(user, subnet);
+    await authorize(authorizeRequest);
 
-    const delegation = await getDelegation(user);
-    expect(delegation).not.toBeNull();
+    const subnet = await getSubnet(mockSubnet.subnet);
+    expect(subnet).toBeDefined();
 
-    if (delegation) {
-      expect(equal(delegation.user, user)).toBe(true);
-      expect(equal(delegation.subnet.signer, signer)).toBe(true);
+    if (subnet) {
+      expect(
+        subnet.delegates.some((d) => equal(d, authorizeRequest.user)),
+      ).toBe(true);
     }
   });
 
   it("should remove user authorization for a subnet", async () => {
-    const user = new Uint8Array([1, 2, 3]);
-    const signer = new Uint8Array([4, 5, 6]);
-    const signature = new Uint8Array([7, 8, 9]);
-    const subnet = { signer, signature };
+    const unauthorizeRequest: UnAuthorize = {
+      user: new Uint8Array([3, 4, 5]),
+      subnet: mockSubnet.subnet,
+      proof: {
+        signer: mockSubnet.delegates[0],
+        signature: new Uint8Array([1, 2, 3]),
+      },
+    };
 
-    await unauthorize(user, subnet);
+    await unauthorize(unauthorizeRequest);
 
-    const delegation = await getDelegation(user);
-    expect(delegation).toBeNull();
+    const updatedSubnet = await getSubnet(mockSubnet.subnet);
+    expect(updatedSubnet).toBeDefined();
+
+    if (updatedSubnet) {
+      expect(
+        updatedSubnet.delegates.some((d) => equal(d, unauthorizeRequest.user)),
+      ).toBe(false);
+    }
   });
 });

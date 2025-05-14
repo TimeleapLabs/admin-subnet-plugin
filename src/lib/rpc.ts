@@ -1,16 +1,26 @@
-import { Credit, Debit, Refund, Signature } from "@model/accounting.js";
+import {
+  Authorize,
+  Credit,
+  Debit,
+  Refund,
+  Signature,
+  UnAuthorize,
+} from "@model/accounting.js";
 import {
   getClient,
   incUserBalance,
   recordCredit,
   recordDebit,
   safeDecUserBalance,
-  addDelegation,
-  removeDelegation,
   safeRecordRefund,
   getDelegation,
+  addDelegateToSubnet,
+  removeDelegateFromSubnet,
+  addAuthorizeDelegationRecord,
+  addUnAuthorizeDelegationRecord,
+  getSubnet,
 } from "@lib/db.js";
-import { equal } from "@lib/binary.js";
+import { checkSigner } from "@lib/check.js";
 
 /**
  * @description Credit user balance
@@ -26,10 +36,12 @@ export const credit = async (credit: Credit) => {
 
   try {
     await session.withTransaction(async () => {
+      await checkSigner(credit.subnet, credit.proof.signer, session);
+
       await incUserBalance(
         credit.user,
         credit.currency,
-        credit.subnet.signer,
+        credit.subnet,
         credit.amount,
         session,
       );
@@ -55,10 +67,12 @@ export const debit = async (debit: Debit) => {
 
   try {
     await session.withTransaction(async () => {
+      await checkSigner(debit.subnet, debit.proof.signer, session);
+
       await safeDecUserBalance(
         debit.user.signer,
         debit.currency,
-        debit.subnet.signer,
+        debit.subnet,
         debit.amount,
         session,
       );
@@ -84,12 +98,13 @@ export const refund = async (refund: Refund) => {
 
   try {
     await session.withTransaction(async () => {
+      await checkSigner(refund.subnet, refund.proof.signer, session);
       await safeRecordRefund(refund, session);
 
       await incUserBalance(
         refund.user,
         refund.currency,
-        refund.subnet.signer,
+        refund.subnet,
         refund.amount,
         session,
       );
@@ -101,32 +116,44 @@ export const refund = async (refund: Refund) => {
 
 /**
  * @description Authorize user for a subnet
- * @param user User's public key
- * @param subnet Subnet signature
+ * @param request Authorize request
  * @notes This function is used to authorize a user for a specific subnet.
  *        It adds a delegation entry in the database.
  */
-export const authorize = async (user: Uint8Array, subnet: Signature) =>
-  addDelegation(user, subnet);
-
-/**
- * @description Remove user authorization for a subnet
- * @param user User's public key
- * @notes This function is used to remove a user's authorization for a specific subnet.
- *        It removes the delegation entry from the database.
- */
-export const unauthorize = async (user: Uint8Array, subnet: Signature) => {
+export const authorize = async (request: Authorize) => {
   const client = await getClient();
   const session = client.startSession();
 
   try {
     await session.withTransaction(async () => {
-      const delegation = await getDelegation(user, session);
-      if (!delegation || !equal(delegation.subnet.signer, subnet.signer)) {
-        throw new Error("Delegation not found or subnet mismatch");
-      }
+      await checkSigner(request.subnet, request.proof.signer, session);
+      await addDelegateToSubnet(request.subnet, request.user, session);
+      await addAuthorizeDelegationRecord(request, session);
+    });
+  } finally {
+    session.endSession();
+  }
+};
 
-      await removeDelegation(user, session);
+/**
+ * @description Remove user authorization for a subnet
+ * @param unauthorize UnAuthorize request
+ * @notes This function is used to remove a user's authorization for a specific subnet.
+ *        It removes the delegation entry from the database.
+ */
+export const unauthorize = async (unauthorize: UnAuthorize) => {
+  const client = await getClient();
+  const session = client.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      await checkSigner(unauthorize.subnet, unauthorize.proof.signer, session);
+      await removeDelegateFromSubnet(
+        unauthorize.subnet,
+        unauthorize.user,
+        session,
+      );
+      await addUnAuthorizeDelegationRecord(unauthorize, session);
     });
   } finally {
     session.endSession();

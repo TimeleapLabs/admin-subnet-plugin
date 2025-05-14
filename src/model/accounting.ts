@@ -23,7 +23,8 @@ export interface Credit {
   amount: number;
   currency: string;
   user: Uint8Array | Buffer;
-  subnet: Signature;
+  subnet: Uint8Array | Buffer;
+  proof: Signature;
 }
 
 export function encodeCredit(sia: Sia, credit: Credit): Sia {
@@ -31,7 +32,8 @@ export function encodeCredit(sia: Sia, credit: Credit): Sia {
   sia.addUInt64(credit.amount);
   sia.addString8(credit.currency);
   sia.addByteArrayN(credit.user);
-  encodeSignature(sia, credit.subnet);
+  sia.addByteArrayN(credit.subnet);
+  encodeSignature(sia, credit.proof);
   return sia;
 }
 
@@ -41,7 +43,8 @@ export function decodeCredit(sia: Sia): Credit {
     amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: sia.readByteArrayN(32),
-    subnet: decodeSignature(sia),
+    subnet: sia.readByteArrayN(32),
+    proof: decodeSignature(sia),
   };
 }
 
@@ -50,7 +53,8 @@ export interface Refund {
   amount: number;
   currency: string;
   user: Uint8Array | Buffer;
-  subnet: Signature;
+  subnet: Uint8Array | Buffer;
+  proof: Signature;
 }
 
 export function encodeRefund(sia: Sia, refund: Refund): Sia {
@@ -58,7 +62,8 @@ export function encodeRefund(sia: Sia, refund: Refund): Sia {
   sia.addUInt64(refund.amount);
   sia.addString8(refund.currency);
   sia.addByteArrayN(refund.user);
-  encodeSignature(sia, refund.subnet);
+  sia.addByteArrayN(refund.subnet);
+  encodeSignature(sia, refund.proof);
   return sia;
 }
 
@@ -68,7 +73,8 @@ export function decodeRefund(sia: Sia): Refund {
     amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: sia.readByteArrayN(32),
-    subnet: decodeSignature(sia),
+    subnet: sia.readByteArrayN(32),
+    proof: decodeSignature(sia),
   };
 }
 
@@ -77,7 +83,8 @@ export interface Debit {
   amount: number;
   currency: string;
   user: Signature;
-  subnet: Signature;
+  subnet: Uint8Array | Buffer;
+  proof: Signature;
 }
 
 export function encodeDebit(sia: Sia, debit: Debit): Sia {
@@ -85,7 +92,8 @@ export function encodeDebit(sia: Sia, debit: Debit): Sia {
   sia.addUInt64(debit.amount);
   sia.addString8(debit.currency);
   encodeSignature(sia, debit.user);
-  encodeSignature(sia, debit.subnet);
+  sia.addByteArrayN(debit.subnet);
+  encodeSignature(sia, debit.proof);
   return sia;
 }
 
@@ -95,42 +103,49 @@ export function decodeDebit(sia: Sia): Debit {
     amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: decodeSignature(sia),
-    subnet: decodeSignature(sia),
+    subnet: sia.readByteArrayN(32),
+    proof: decodeSignature(sia),
   };
 }
 
 export interface Authorize {
-  address: Uint8Array | Buffer;
-  subnet: Signature;
+  user: Uint8Array | Buffer;
+  subnet: Uint8Array | Buffer;
+  proof: Signature;
 }
 
 export function encodeAuthorize(sia: Sia, authorize: Authorize): Sia {
-  sia.addByteArrayN(authorize.address);
-  encodeSignature(sia, authorize.subnet);
+  sia.addByteArrayN(authorize.user);
+  sia.addByteArrayN(authorize.subnet);
+  encodeSignature(sia, authorize.proof);
   return sia;
 }
 
 export function decodeAuthorize(sia: Sia): Authorize {
   return {
-    address: sia.readByteArrayN(32),
-    subnet: decodeSignature(sia),
+    user: sia.readByteArrayN(32),
+    subnet: sia.readByteArrayN(32),
+    proof: decodeSignature(sia),
   };
 }
 
 export interface UnAuthorize {
-  address: Uint8Array | Buffer;
-  subnet: Signature;
+  user: Uint8Array | Buffer;
+  subnet: Uint8Array | Buffer;
+  proof: Signature;
 }
 
 export function encodeUnAuthorize(sia: Sia, unAuthorize: UnAuthorize): Sia {
-  sia.addByteArrayN(unAuthorize.address);
-  encodeSignature(sia, unAuthorize.subnet);
+  sia.addByteArrayN(unAuthorize.user);
+  sia.addByteArrayN(unAuthorize.subnet);
+  encodeSignature(sia, unAuthorize.proof);
   return sia;
 }
 
 export function decodeUnAuthorize(sia: Sia): UnAuthorize {
   return {
-    address: sia.readByteArrayN(32),
-    subnet: decodeSignature(sia),
+    user: sia.readByteArrayN(32),
+    subnet: sia.readByteArrayN(32),
+    proof: decodeSignature(sia),
   };
 }

@@ -17,7 +17,8 @@ schema Credit {
   amount    uint64
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
-  subnet    Signature
+  subnet    byteN(length = 32)
+  proof     Signature
 }
 
 /**
@@ -31,7 +32,8 @@ schema Refund {
   amount    uint64
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
-  subnet    Signature
+  subnet    byteN(length = 32)
+  proof     Signature
 }
 
 /**
@@ -48,7 +50,8 @@ schema Debit {
   amount    uint64
   currency  string8(encoding = "ascii")
   user      Signature
-  subnet    Signature
+  subnet    byteN(length = 32)
+  proof     Signature
 }
 
 /**
@@ -56,8 +59,9 @@ schema Debit {
 to sign requests on behalf of the subnet.
 */
 schema Authorize {
-  address   byteN(length = 32)
-  subnet    Signature
+  user    byteN(length = 32)
+  subnet  byteN(length = 32)
+  proof   Signature
 }
 
 /**
@@ -65,6 +69,7 @@ schema Authorize {
 to sign requests on behalf of the subnet.
 */
 schema UnAuthorize {
-  address   byteN(length = 32)
-  subnet    Signature
+  user    byteN(length = 32)
+  subnet  byteN(length = 32)
+  proof   Signature
 }

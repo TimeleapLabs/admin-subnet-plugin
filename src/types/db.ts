@@ -1,5 +1,12 @@
-import { WithId } from "mongodb";
-import type { Signature, Debit, Credit, Refund } from "@model/accounting.js";
+import { Auth, WithId } from "mongodb";
+import type {
+  Signature,
+  Debit,
+  Credit,
+  Refund,
+  Authorize,
+  UnAuthorize,
+} from "@model/accounting.js";
 
 export type User = {
   user: Uint8Array;
@@ -10,26 +17,46 @@ export type User = {
 
 export type UserDocument = WithId<User>;
 
-export type Delegate = {
-  user: Uint8Array;
-  subnet: Signature;
-};
-
-export type DelegateDocument = WithId<Delegate>;
-
 export interface DebitTransaction extends Debit {
   type: "debit";
+  createdAt: Date;
 }
 
 export interface CreditTransaction extends Credit {
   type: "credit";
+  createdAt: Date;
 }
 
 export interface RefundTransaction extends Refund {
   type: "refund";
+  createdAt: Date;
 }
 
 export type Transaction =
   | DebitTransaction
   | CreditTransaction
   | RefundTransaction;
+
+export interface AuthorizeRequest extends Authorize {
+  type: "authorize";
+  createdAt: Date;
+}
+
+export interface UnAuthorizeRequest extends UnAuthorize {
+  type: "unauthorize";
+  createdAt: Date;
+}
+
+export type Delegate = AuthorizeRequest | UnAuthorizeRequest;
+export type DelegateDocument = WithId<Delegate>;
+
+export type Subnet = {
+  subnet: Uint8Array;
+  name: string;
+  delegates: Uint8Array[];
+  stakeUser: string;
+  stakeAmount: number;
+  stakeExpiration: Date;
+};
+
+export type SubnetDocument = WithId<Subnet>;
