@@ -73,3 +73,37 @@ schema UnAuthorize {
   subnet  byteN(length = 32)
   proof   Signature
 }
+
+/**
+@dev A function call request.
+The `plugin` and `method` fields are strings
+that specify the plugin and method to be called.
+The `uuid` field is a unique identifier for the request.
+*/
+schema FunctionCall {
+  uuid      byte8
+  plugin    string8(encoding = "ascii")
+  method    string8(encoding = "ascii")
+}
+
+/**
+@dev A function call response.
+The `uuid` field is a unique identifier for the request.
+The `error` field is an optional error code.
+*/
+schema Error {
+  uuid        byte8
+  error       uint16
+}
+
+/**
+@dev A function call response.
+The `uuid` field is a unique identifier for the request.
+The `error` field is an optional error code.
+The `status` field indicates whether the request was successful.
+*/
+schema Success {
+  uuid        byte8
+  error?      uint16
+  status      bool
+}

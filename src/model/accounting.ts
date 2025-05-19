@@ -149,3 +149,63 @@ export function decodeUnAuthorize(sia: Sia): UnAuthorize {
     proof: decodeSignature(sia),
   };
 }
+
+export interface FunctionCall {
+  uuid: Uint8Array | Buffer;
+  plugin: string;
+  method: string;
+}
+
+export function encodeFunctionCall(sia: Sia, functionCall: FunctionCall): Sia {
+  sia.addByteArray8(functionCall.uuid);
+  sia.addString8(functionCall.plugin);
+  sia.addString8(functionCall.method);
+  return sia;
+}
+
+export function decodeFunctionCall(sia: Sia): FunctionCall {
+  return {
+    uuid: sia.readByteArray8(),
+    plugin: sia.readString8(),
+    method: sia.readString8(),
+  };
+}
+
+export interface Error {
+  uuid: Uint8Array | Buffer;
+  error: number;
+}
+
+export function encodeError(sia: Sia, error: Error): Sia {
+  sia.addByteArray8(error.uuid);
+  sia.addUInt16(error.error);
+  return sia;
+}
+
+export function decodeError(sia: Sia): Error {
+  return {
+    uuid: sia.readByteArray8(),
+    error: sia.readUInt16(),
+  };
+}
+
+export interface Success {
+  uuid: Uint8Array | Buffer;
+  error?: number;
+  status: boolean;
+}
+
+export function encodeSuccess(sia: Sia, success: Success): Sia {
+  sia.addByteArray8(success.uuid);
+  sia.addUInt16(success.error ?? 0);
+  sia.addBool(success.status);
+  return sia;
+}
+
+export function decodeSuccess(sia: Sia): Success {
+  return {
+    uuid: sia.readByteArray8(),
+    error: sia.readUInt16(),
+    status: sia.readBool(),
+  };
+}
