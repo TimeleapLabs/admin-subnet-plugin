@@ -1,6 +1,5 @@
 import { debit, credit, refund } from "@lib/rpc.js";
 import { getUserBalance } from "@lib/db.js";
-import { equal } from "@lib/binary.js";
 
 import { mockSubnet } from "./setup.js";
 
@@ -71,6 +70,7 @@ describe("Accounting transactions", () => {
   it("should refund a user's balance", async () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
+    const debit = new Uint8Array([1, 2, 3]);
     const proof = {
       signer: mockSubnet.delegates[0],
       signature: new Uint8Array([4, 5, 6]),
@@ -82,6 +82,7 @@ describe("Accounting transactions", () => {
     const refundTransaction = {
       uuid,
       user,
+      debit,
       subnet,
       amount,
       currency,
@@ -98,8 +99,9 @@ describe("Accounting transactions", () => {
   });
 
   it("should fail a refund if uuid doesn't match", async () => {
-    const uuid = new Uint8Array([1, 3, 3]);
+    const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
+    const debit = new Uint8Array([1, 3, 3]);
     const proof = {
       signer: mockSubnet.delegates[0],
       signature: new Uint8Array([4, 5, 6]),
@@ -110,6 +112,7 @@ describe("Accounting transactions", () => {
 
     const refundTransaction = {
       uuid,
+      debit,
       user,
       subnet,
       amount,
@@ -118,13 +121,14 @@ describe("Accounting transactions", () => {
     };
 
     await expect(refund(refundTransaction)).rejects.toThrow(
-      "Credit transaction not found",
+      "Debit transaction not found",
     );
   });
 
   it("should fail a refund if currency doesn't match", async () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
+    const debit = new Uint8Array([1, 2, 3]);
     const proof = {
       signer: mockSubnet.delegates[0],
       signature: new Uint8Array([4, 5, 6]),
@@ -136,6 +140,7 @@ describe("Accounting transactions", () => {
     const refundTransaction = {
       uuid,
       user,
+      debit,
       subnet,
       amount,
       currency,
@@ -143,13 +148,14 @@ describe("Accounting transactions", () => {
     };
 
     await expect(refund(refundTransaction)).rejects.toThrow(
-      "Credit transaction not found",
+      "Debit transaction not found",
     );
   });
 
   it("should fail a refund if amount is bigger than the credit", async () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
+    const debit = new Uint8Array([1, 2, 3]);
     const subnet = mockSubnet.subnet;
     const proof = {
       signer: mockSubnet.delegates[0],
@@ -161,6 +167,7 @@ describe("Accounting transactions", () => {
     const refundTransaction = {
       uuid,
       user,
+      debit,
       subnet,
       amount,
       currency,
@@ -168,7 +175,7 @@ describe("Accounting transactions", () => {
     };
 
     await expect(refund(refundTransaction)).rejects.toThrow(
-      "Credit transaction not found",
+      "Debit transaction not found",
     );
   });
 });

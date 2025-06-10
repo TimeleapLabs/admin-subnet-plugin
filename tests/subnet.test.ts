@@ -1,5 +1,5 @@
 import { authorize, unauthorize } from "@lib/rpc.js";
-import { getDelegation, getSubnet } from "@lib/db.js";
+import { getSubnet } from "@lib/db.js";
 import { equal } from "@lib/binary.js";
 import { Authorize, UnAuthorize } from "@model/accounting.js";
 

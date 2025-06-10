@@ -186,19 +186,19 @@ export const safeRecordRefund = async (
   const db = await getDb();
   const collection = db.collection<Transaction>("transactions");
 
-  const credit = await collection.findOne(
+  const debit = await collection.findOne(
     {
-      uuid: refund.uuid,
+      uuid: refund.debit,
       subnet: refund.subnet,
-      type: "credit",
+      type: "debit",
       amount: { $gte: refund.amount },
       currency: refund.currency,
     },
     { session },
   );
 
-  if (check && !credit) {
-    throw new Error("Credit transaction not found");
+  if (check && !debit) {
+    throw new Error("Debit transaction not found");
   }
 
   return await collection.insertOne(

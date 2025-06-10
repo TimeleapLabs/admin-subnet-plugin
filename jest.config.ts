@@ -11,4 +11,5 @@ export default {
     "\./setup\.js": "./setup.ts",
   },
   testTimeout: 30000,
+  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
 };

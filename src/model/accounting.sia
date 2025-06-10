@@ -7,6 +7,14 @@ schema Signature {
 }
 
 /**
+@dev Request fee information.
+*/
+schema Fee {
+  amount     uint64
+  currency   string8(encoding = "ascii")
+}
+
+/**
 @dev A credit request.
 
 Adds the `amount` to user's account in `currency`.
@@ -29,6 +37,7 @@ Fails if the uuid is not an existing credit request.
 */
 schema Refund {
   uuid      byte8
+  debit     byte8
   amount    uint64
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
@@ -84,6 +93,8 @@ schema FunctionCall {
   uuid      byte8
   plugin    string8(encoding = "ascii")
   method    string8(encoding = "ascii")
+  timeout   uint64
+  fee       Fee
 }
 
 /**
@@ -92,6 +103,7 @@ The `uuid` field is a unique identifier for the request.
 The `error` field is an optional error code.
 */
 schema Error {
+  opcode      uint8
   uuid        byte8
   error       uint16
 }
@@ -103,6 +115,7 @@ The `error` field is an optional error code.
 The `status` field indicates whether the request was successful.
 */
 schema Success {
+  opcode      uint8
   uuid        byte8
   error?      uint16
   status      bool

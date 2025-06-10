@@ -1,7 +1,8 @@
-import WebSocket from "ws";
 import { encodeError, encodeSuccess, Signature } from "@model/accounting.js";
-import { Identity, Wallet } from "@timeleap/client";
+import { Identity, Wallet, OpCodes } from "@timeleap/client";
 import { Sia } from "@timeleap/sia";
+
+import WebSocket from "ws";
 
 export const wrap = (wallet: Wallet) => {
   const sendError = async (
@@ -9,13 +10,21 @@ export const wrap = (wallet: Wallet) => {
     errorCode: number,
     uuid: Uint8Array,
   ) => {
-    const error = encodeError(Sia.alloc(512), { error: errorCode, uuid });
+    const error = encodeError(Sia.alloc(512), {
+      opcode: OpCodes.RPCResponse,
+      error: errorCode,
+      uuid,
+    });
     const payload = await wallet.signSia(error);
     ws.send(payload.toUint8ArrayReference());
   };
 
   const sendSuccess = async (ws: WebSocket, uuid: Uint8Array) => {
-    const success = encodeSuccess(Sia.alloc(512), { uuid, status: true });
+    const success = encodeSuccess(Sia.alloc(512), {
+      opcode: OpCodes.RPCResponse,
+      uuid,
+      status: true,
+    });
     const payload = await wallet.signSia(success);
     ws.send(payload.toUint8ArrayReference());
   };

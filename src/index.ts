@@ -12,6 +12,7 @@ import {
   decodeFunctionCall,
   decodeRefund,
 } from "@model/accounting.js";
+import { logger } from "./lib/logging.js";
 
 config();
 
@@ -27,7 +28,7 @@ wss.on("connection", (ws) => {
 
   ws.on("message", async (buf: Buffer) => {
     if (!(await worker.verify(buf))) {
-      console.log("Invalid signature");
+      logger.error("Invalid signature from worker");
       return;
     }
 
@@ -35,8 +36,8 @@ wss.on("connection", (ws) => {
     const { uuid, plugin, method } = decodeFunctionCall(sia);
 
     if (plugin !== PLUGIN_NAME) {
-      console.log("Invalid plugin");
-      await sendError(ws, 404, uuid);
+      logger.error("Invalid plugin:", plugin);
+      return await sendError(ws, 404, uuid);
     }
 
     const clientBuf = buf.subarray(sia.offset);
@@ -91,15 +92,15 @@ wss.on("connection", (ws) => {
           break;
 
         default:
-          console.log("Unknown method");
+          logger.error("Unknown method:", method);
           await sendError(ws, 404, uuid);
           break;
       }
     } catch (error) {
-      console.error("Error processing message:", error);
+      logger.error("Error processing message:", error);
       await sendError(ws, 500, uuid);
     }
   });
 });
 
-console.log("Server started on port 3000");
+logger.info("WebSocket server is running on ws://localhost:3000");
