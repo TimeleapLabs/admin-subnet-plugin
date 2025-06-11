@@ -26,6 +26,7 @@ import type {
   UnAuthorize,
 } from "@model/accounting.js";
 import type { Maybe } from "@type/helpers.js";
+import { ErrorCodes } from "./errors.js";
 
 let client: MongoClient | null = null;
 
@@ -129,7 +130,9 @@ export const safeDecUserBalance = async (
   );
 
   if ((check && result.matchedCount === 0) || result.modifiedCount === 0) {
-    throw new Error("Insufficient balance");
+    throw new Error("Insufficient balance", {
+      cause: { code: ErrorCodes.INSUFFICIENT_BALANCE },
+    });
   }
 
   return result;

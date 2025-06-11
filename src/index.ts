@@ -3,20 +3,25 @@ import { Sia } from "@timeleap/sia";
 import { config } from "dotenv";
 import { Wallet, Identity } from "@timeleap/client";
 import { credit, debit, refund, authorize, unauthorize } from "@lib/rpc.js";
+import { logger } from "@lib/logging.js";
 
 import * as calls from "@lib/calls.js";
 
 import {
+  decodeAuthorize,
   decodeCredit,
   decodeDebit,
   decodeFunctionCall,
   decodeRefund,
+  decodeUnAuthorize,
 } from "@model/accounting.js";
-import { logger } from "./lib/logging.js";
+
+import type { ErrorType } from "./lib/errors.js";
 
 config();
 
-const wss = new WebSocketServer({ port: 3000 });
+const port = parseInt(process.env.ADMIN_PLUGIN_PORT || "3000", 10);
+const wss = new WebSocketServer({ port });
 const wallet = await Wallet.fromBase58(process.env.PLUGIN_PRIVATE_KEY!);
 const worker = await Identity.fromBase58(process.env.WORKER_PUBLIC_KEY!);
 
@@ -24,7 +29,7 @@ const { sendError, sendSuccess, verifySignature } = calls.wrap(wallet);
 const PLUGIN_NAME = "swiss.timeleap.admin.v1";
 
 wss.on("connection", (ws) => {
-  console.log("Client connected");
+  logger.info("Client connected");
 
   ws.on("message", async (buf: Buffer) => {
     if (!(await worker.verify(buf))) {
@@ -33,63 +38,76 @@ wss.on("connection", (ws) => {
     }
 
     const sia = new Sia(buf);
-    const { uuid, plugin, method } = decodeFunctionCall(sia);
+    const { uuid, plugin, method } = decodeFunctionCall(sia.skip(1));
 
     if (plugin !== PLUGIN_NAME) {
       logger.error("Invalid plugin:", plugin);
       return await sendError(ws, 404, uuid);
     }
 
-    const clientBuf = buf.subarray(sia.offset);
+    const paramsStart = sia.offset;
 
     try {
       switch (method) {
-        case "credit":
+        case "credit": {
           const record = decodeCredit(sia);
-          if (!(await verifySignature(ws, clientBuf, record.proof))) {
+          const paramsEnd = sia.offset;
+          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
+          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
           await credit(record);
           await sendSuccess(ws, uuid);
           break;
+        }
 
-        case "debit":
-          const debitRecord = decodeDebit(sia);
-          if (!(await verifySignature(ws, clientBuf, debitRecord.proof))) {
+        case "debit": {
+          const record = decodeDebit(sia);
+          const paramsEnd = sia.offset;
+          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
+          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
-          await debit(debitRecord);
+          await debit(record);
           await sendSuccess(ws, uuid);
           break;
+        }
 
-        case "refund":
-          const refundRecord = decodeRefund(sia);
-          if (!(await verifySignature(ws, clientBuf, refundRecord.proof))) {
+        case "refund": {
+          const record = decodeRefund(sia);
+          const paramsEnd = sia.offset;
+          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
+          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
-          await refund(refundRecord);
+          await refund(record);
           await sendSuccess(ws, uuid);
           break;
+        }
 
-        case "authorize":
-          const authorizeRecord = decodeCredit(sia);
-          if (!(await verifySignature(ws, clientBuf, authorizeRecord.proof))) {
+        case "authorize": {
+          const record = decodeAuthorize(sia);
+          const paramsEnd = sia.offset;
+          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
+          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
-          await authorize(authorizeRecord);
+          await authorize(record);
           await sendSuccess(ws, uuid);
           break;
+        }
 
-        case "unauthorize":
-          const unauthorizeRecord = decodeCredit(sia);
-          if (
-            !(await verifySignature(ws, clientBuf, unauthorizeRecord.proof))
-          ) {
+        case "unauthorize": {
+          const record = decodeUnAuthorize(sia);
+          const paramsEnd = sia.offset;
+          const paramsBuf = buf.subarray(paramsStart, paramsEnd); // Exclude the signature length
+          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
-          await unauthorize(unauthorizeRecord);
+          await unauthorize(record);
           await sendSuccess(ws, uuid);
           break;
+        }
 
         default:
           logger.error("Unknown method:", method);
@@ -97,10 +115,11 @@ wss.on("connection", (ws) => {
           break;
       }
     } catch (error) {
-      logger.error("Error processing message:", error);
-      await sendError(ws, 500, uuid);
+      logger.error(error, "Error processing message");
+      const errorCode = (error as ErrorType).cause?.code || 500;
+      await sendError(ws, errorCode, uuid);
     }
   });
 });
 
-logger.info("WebSocket server is running on ws://localhost:3000");
+logger.info(`WebSocket server is running on ws://localhost:${port}`);

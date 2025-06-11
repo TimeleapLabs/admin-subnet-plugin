@@ -8,6 +8,7 @@ export const logger = pino({
       colorize: true,
       translateTime: "SYS:standard",
       ignore: "pid,hostname",
+      errorLikeObjectKeys: ["err", "error"],
     },
   },
 });

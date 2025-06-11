@@ -3,6 +3,7 @@ import { Identity, Wallet, OpCodes } from "@timeleap/client";
 import { Sia } from "@timeleap/sia";
 
 import WebSocket from "ws";
+import { logger } from "./logging.js";
 
 export const wrap = (wallet: Wallet) => {
   const sendError = async (
@@ -37,7 +38,7 @@ export const wrap = (wallet: Wallet) => {
     const identity = await Identity.fromPublicKey(proof.signer);
     const isValid = await identity.verify(buf);
     if (!isValid) {
-      console.log("Invalid signature");
+      logger.error("Invalid signature");
       await sendError(ws, 401, buf);
     }
     return isValid;
