@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",
-    "@timeleap/sia-schema": "../sia-schema",
+    "@timeleap/sia-schema": "^1.8.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.17",
     "@types/ws": "^8.18.1",

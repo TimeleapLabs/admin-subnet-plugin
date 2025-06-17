@@ -1200,9 +1200,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@timeleap/sia-schema@file:../sia-schema::locator=admin-subnet-plugin%40workspace%3A.":
+"@timeleap/sia-schema@npm:^1.8.0":
   version: 1.8.0
-  resolution: "@timeleap/sia-schema@file:../sia-schema#../sia-schema::hash=36f2d0&locator=admin-subnet-plugin%40workspace%3A."
+  resolution: "@timeleap/sia-schema@npm:1.8.0"
   dependencies:
     change-case: "npm:^5.4.4"
     chevrotain: "npm:^11.0.3"
@@ -1211,7 +1211,7 @@ __metadata:
     prettier: "*"
   bin:
     sia: dist/src/cli.js
-  checksum: 10c0/f04fe53310c743a59fdac4102cb2dce5bdd20cb089ea57c1a419c9de0bbe5cba7a5e89f73c71fafe3fbaeb0fbaea5ace3e796ef1f05325f07746ec644d983f56
+  checksum: 10c0/fc35c7ce098b0b4e8d067266b1ac27de58d32f3c679b24d9a94dfdbf3895ece1ca0e4c6852f2179e1e216139cfeea925cf1ec8fc871e01474fa0329358f95c0f
   languageName: node
   linkType: hard
 
@@ -1580,7 +1580,7 @@ __metadata:
     "@eslint/js": "npm:^9.26.0"
     "@timeleap/client": "npm:^1.5.1"
     "@timeleap/sia": "npm:^2.2.2"
-    "@timeleap/sia-schema": ../sia-schema
+    "@timeleap/sia-schema": "npm:^1.8.0"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^22.15.17"
     "@types/ws": "npm:^8.18.1"
@@ -1605,6 +1605,8 @@ __metadata:
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.32.1"
     ws: "npm:^8.18.2"
+  bin:
+    tl-admin: dist/src/index.js
   languageName: unknown
   linkType: soft
 
