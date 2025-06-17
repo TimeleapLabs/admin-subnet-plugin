@@ -4,8 +4,6 @@
   "dependencies": {
     "@timeleap/client": "^1.5.1",
     "@timeleap/sia": "^2.2.2",
-    "@typescript-eslint/eslint-plugin": "^8.32.1",
-    "@typescript-eslint/parser": "^8.32.1",
     "commander": "^14.0.0",
     "dotenv": "^16.5.0",
     "mongodb": "^6.16.0",
@@ -19,6 +17,8 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.17",
     "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
     "eslint": "^9.26.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
