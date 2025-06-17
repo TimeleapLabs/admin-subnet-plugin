@@ -24,7 +24,6 @@ schema Credit {
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
   subnet    byteN(length = 32)
-  proof     Signature
 }
 
 /**
@@ -38,7 +37,6 @@ schema Refund {
   currency  string8(encoding = "ascii")
   user      byteN(length = 32)
   subnet    byteN(length = 32)
-  proof     Signature
 }
 
 /**
@@ -53,7 +51,20 @@ schema Debit {
   currency  string8(encoding = "ascii")
   user      Signature
   subnet    byteN(length = 32)
-  proof     Signature
+}
+
+/**
+@dev A request to update the subnet EVM address and
+re-fetch its stake from the blockchain.
+The `subnet` field is the identifier of the subnet,
+the `stakeUser` is the new EVM address of the stake.
+
+@notice The `stakeUser` must be a valid EVM address
+with a valid stake on the blockchain.
+**/
+schema UpdateSubnet {
+  subnet    byteN(length = 32)
+  stakeUser byteN(length = 20)
 }
 
 /**
@@ -63,7 +74,6 @@ to sign requests on behalf of the subnet.
 schema Authorize {
   user    byteN(length = 32)
   subnet  byteN(length = 32)
-  proof   Signature
 }
 
 /**
@@ -73,7 +83,6 @@ to sign requests on behalf of the subnet.
 schema UnAuthorize {
   user    byteN(length = 32)
   subnet  byteN(length = 32)
-  proof   Signature
 }
 
 /**
@@ -83,8 +92,8 @@ that specify the plugin and method to be called.
 The `uuid` field is a unique identifier for the request.
 */
 schema FunctionCall {
-  opcode      uint8
-  appId       uint64
+  opcode    uint8
+  appId     uint64
   uuid      byte8
   plugin    string8(encoding = "ascii")
   method    string8(encoding = "ascii")
@@ -116,4 +125,13 @@ schema Success {
   uuid        byte8
   error?      uint16
   status      bool
+}
+
+schema Status {
+  ok      bool
+}
+
+plugin swiss.timeleap.admin.v1 as Admin {
+  method credit(timeout = 10000, fee = 0, currency = "TLP") Credit returns Status
+  method updateSubnet(timeout = 10000, fee = 0, currency = "TLP") UpdateSubnet returns Status
 }

@@ -1,8 +1,9 @@
 import { WebSocketServer } from "ws";
+import { createServer } from "http";
+
 import { Sia } from "@timeleap/sia";
 import { config } from "dotenv";
 import { Wallet, Identity, OpCodes } from "@timeleap/client";
-import { credit, debit, refund, authorize, unauthorize } from "@lib/rpc.js";
 import { logger } from "@lib/logging.js";
 
 import * as calls from "@lib/calls.js";
@@ -15,31 +16,66 @@ import {
   decodeFunctionCall,
   decodeRefund,
   decodeUnAuthorize,
-} from "@model/accounting.js";
+  decodeUpdateSubnet,
+} from "@/model/admin.js";
+
+import {
+  credit,
+  debit,
+  refund,
+  authorize,
+  unauthorize,
+  updateSubnet,
+} from "@lib/rpc.js";
 
 import type { ErrorType } from "./lib/errors.js";
+import type { IncomingMessage, ServerResponse } from "http";
 
 config();
 
-const port = parseInt(process.env.ADMIN_PLUGIN_PORT || "3000", 10);
-const wss = new WebSocketServer({ port });
-const wallet = await Wallet.fromBase58(process.env.PLUGIN_PRIVATE_KEY!);
-const worker = await Identity.fromBase58(process.env.WORKER_PUBLIC_KEY!);
+const handler = (req: IncomingMessage, res: ServerResponse) => {
+  if (req.method === "GET" && req.url === `/${app.protocolVersion}/app`) {
+    const body = JSON.stringify({
+      appId: app.appId,
+      version: app.version,
+      protocol: app.protocolVersion,
+      name: app.name,
+    });
 
-const { sendError, sendSuccess, verifySignature } = calls.wrap(wallet);
-const PLUGIN_NAME = "swiss.timeleap.admin.v1";
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Length": Buffer.byteLength(body),
+      "Cache-Control": "no-store",
+    });
+
+    res.end(body);
+  } else {
+    res.writeHead(404).end();
+  }
+};
+
+const port = parseInt(process.env.ADMIN_PLUGIN_PORT || "9123", 10);
+const server = createServer(handler);
+const wss = new WebSocketServer({ server, path: `/${app.protocolVersion}` });
+const wallet = await Wallet.fromBase58(process.env.PLUGIN_PRIVATE_KEY!);
+
+logger.info(`Subnet public key: ${wallet.toBase58().publicKey}`);
+
+const { sendError, sendSuccess } = calls.wrap(wallet);
 
 wss.on("connection", (ws) => {
-  logger.info("Client connected");
+  logger.info(`New connection established`);
 
   ws.on("message", async (buf: Buffer) => {
-    if (!(await worker.verify(buf))) {
-      logger.error("Invalid signature from worker");
-      return;
-    }
-
     const sia = new Sia(buf);
     const { opcode, appId, uuid, plugin, method } = decodeFunctionCall(sia);
+
+    const sender = await Identity.fromPublicKey(buf.subarray(-96, -64));
+
+    if (!(await sender.verify(buf))) {
+      logger.error("Invalid signature from worker");
+      return sendError(ws, 401, uuid);
+    }
 
     if (appId !== app.appId) {
       logger.error("Invalid appId:", appId);
@@ -51,71 +87,51 @@ wss.on("connection", (ws) => {
       return await sendError(ws, 404, uuid);
     }
 
-    if (plugin !== PLUGIN_NAME) {
+    if (plugin !== app.pluginName) {
       logger.error("Invalid plugin:", plugin);
       return await sendError(ws, 404, uuid);
     }
-
-    const paramsStart = sia.offset;
 
     try {
       switch (method) {
         case "credit": {
           const record = decodeCredit(sia);
-          const paramsEnd = sia.offset;
-          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
-          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
-            return;
-          }
-          await credit(record, uuid);
+          await credit(record, uuid, sender.publicKey);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "debit": {
           const record = decodeDebit(sia);
-          const paramsEnd = sia.offset;
-          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
-          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
-            return;
-          }
-          await debit(record, uuid);
+          await debit(record, uuid, sender.publicKey);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "refund": {
           const record = decodeRefund(sia);
-          const paramsEnd = sia.offset;
-          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
-          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
-            return;
-          }
-          await refund(record, uuid);
+          await refund(record, uuid, sender.publicKey);
+          await sendSuccess(ws, uuid);
+          break;
+        }
+
+        case "updateSubnet": {
+          const record = decodeUpdateSubnet(sia);
+          await updateSubnet(record, sender.publicKey);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "authorize": {
           const record = decodeAuthorize(sia);
-          const paramsEnd = sia.offset;
-          const paramsBuf = buf.subarray(paramsStart, paramsEnd);
-          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
-            return;
-          }
-          await authorize(record);
+          await authorize(record, sender.publicKey);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "unauthorize": {
           const record = decodeUnAuthorize(sia);
-          const paramsEnd = sia.offset;
-          const paramsBuf = buf.subarray(paramsStart, paramsEnd); // Exclude the signature length
-          if (!(await verifySignature(ws, paramsBuf, record.proof))) {
-            return;
-          }
-          await unauthorize(record);
+          await unauthorize(record, sender.publicKey);
           await sendSuccess(ws, uuid);
           break;
         }
@@ -133,4 +149,6 @@ wss.on("connection", (ws) => {
   });
 });
 
-logger.info(`WebSocket server is running on ws://localhost:${port}`);
+server.listen(port, () => {
+  logger.info(`Server is listening on port ${port}`);
+});

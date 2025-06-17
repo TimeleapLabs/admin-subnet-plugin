@@ -24,7 +24,8 @@ import type {
   Refund,
   Signature,
   UnAuthorize,
-} from "@model/accounting.js";
+  UpdateSubnet,
+} from "@/model/admin.js";
 import type { Maybe } from "@type/helpers.js";
 import { ErrorCodes } from "./errors.js";
 
@@ -333,5 +334,18 @@ export const removeDelegateFromSubnet = async (
     { subnet },
     { $pull: { delegates: user } },
     { session },
+  );
+};
+
+export const upsertSubnet = async (
+  update: UpdateSubnet,
+  session: Maybe<ClientSession> = undefined,
+): Promise<UpdateResult<Subnet>> => {
+  const db = await getDb();
+  const collection = db.collection<Subnet>("subnets");
+  return await collection.updateOne(
+    { subnet: update.subnet },
+    { $set: { stakeUser: update.stakeUser, updatedAt: new Date() } },
+    { session, upsert: true },
   );
 };

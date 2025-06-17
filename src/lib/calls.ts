@@ -1,4 +1,4 @@
-import { encodeError, encodeSuccess, Signature } from "@model/accounting.js";
+import { encodeError, encodeSuccess, Signature } from "@/model/admin.js";
 import { Identity, Wallet, OpCodes } from "@timeleap/client";
 import { Sia } from "@timeleap/sia";
 import { appId } from "./app.js";
@@ -26,6 +26,7 @@ export const wrap = (wallet: Wallet) => {
     const success = encodeSuccess(Sia.alloc(512), {
       opcode: OpCodes.RPCResponse,
       appId,
+      error: 0,
       uuid,
       status: true,
     });
@@ -33,23 +34,8 @@ export const wrap = (wallet: Wallet) => {
     ws.send(payload.toUint8ArrayReference());
   };
 
-  const verifySignature = async (
-    ws: WebSocket,
-    buf: Buffer,
-    proof: Signature,
-  ) => {
-    const identity = await Identity.fromPublicKey(proof.signer);
-    const isValid = await identity.verify(buf);
-    if (!isValid) {
-      logger.error("Invalid signature");
-      await sendError(ws, 401, buf);
-    }
-    return isValid;
-  };
-
   return {
     sendError,
     sendSuccess,
-    verifySignature,
   };
 };

@@ -1,4 +1,5 @@
 import { Sia } from "@timeleap/sia";
+import { Client, Function } from "@timeleap/client";
 
 export interface Signature {
   signer: Uint8Array | Buffer;
@@ -41,7 +42,6 @@ export interface Credit {
   currency: string;
   user: Uint8Array | Buffer;
   subnet: Uint8Array | Buffer;
-  proof: Signature;
 }
 
 export function encodeCredit(sia: Sia, credit: Credit): Sia {
@@ -49,7 +49,6 @@ export function encodeCredit(sia: Sia, credit: Credit): Sia {
   sia.addString8(credit.currency);
   sia.addByteArrayN(credit.user);
   sia.addByteArrayN(credit.subnet);
-  encodeSignature(sia, credit.proof);
   return sia;
 }
 
@@ -59,7 +58,6 @@ export function decodeCredit(sia: Sia): Credit {
     currency: sia.readString8(),
     user: sia.readByteArrayN(32),
     subnet: sia.readByteArrayN(32),
-    proof: decodeSignature(sia),
   };
 }
 
@@ -69,7 +67,6 @@ export interface Refund {
   currency: string;
   user: Uint8Array | Buffer;
   subnet: Uint8Array | Buffer;
-  proof: Signature;
 }
 
 export function encodeRefund(sia: Sia, refund: Refund): Sia {
@@ -78,7 +75,6 @@ export function encodeRefund(sia: Sia, refund: Refund): Sia {
   sia.addString8(refund.currency);
   sia.addByteArrayN(refund.user);
   sia.addByteArrayN(refund.subnet);
-  encodeSignature(sia, refund.proof);
   return sia;
 }
 
@@ -89,7 +85,6 @@ export function decodeRefund(sia: Sia): Refund {
     currency: sia.readString8(),
     user: sia.readByteArrayN(32),
     subnet: sia.readByteArrayN(32),
-    proof: decodeSignature(sia),
   };
 }
 
@@ -98,7 +93,6 @@ export interface Debit {
   currency: string;
   user: Signature;
   subnet: Uint8Array | Buffer;
-  proof: Signature;
 }
 
 export function encodeDebit(sia: Sia, debit: Debit): Sia {
@@ -106,7 +100,6 @@ export function encodeDebit(sia: Sia, debit: Debit): Sia {
   sia.addString8(debit.currency);
   encodeSignature(sia, debit.user);
   sia.addByteArrayN(debit.subnet);
-  encodeSignature(sia, debit.proof);
   return sia;
 }
 
@@ -116,20 +109,35 @@ export function decodeDebit(sia: Sia): Debit {
     currency: sia.readString8(),
     user: decodeSignature(sia),
     subnet: sia.readByteArrayN(32),
-    proof: decodeSignature(sia),
+  };
+}
+
+export interface UpdateSubnet {
+  subnet: Uint8Array | Buffer;
+  stakeUser: Uint8Array | Buffer;
+}
+
+export function encodeUpdateSubnet(sia: Sia, updateSubnet: UpdateSubnet): Sia {
+  sia.addByteArrayN(updateSubnet.subnet);
+  sia.addByteArrayN(updateSubnet.stakeUser);
+  return sia;
+}
+
+export function decodeUpdateSubnet(sia: Sia): UpdateSubnet {
+  return {
+    subnet: sia.readByteArrayN(32),
+    stakeUser: sia.readByteArrayN(20),
   };
 }
 
 export interface Authorize {
   user: Uint8Array | Buffer;
   subnet: Uint8Array | Buffer;
-  proof: Signature;
 }
 
 export function encodeAuthorize(sia: Sia, authorize: Authorize): Sia {
   sia.addByteArrayN(authorize.user);
   sia.addByteArrayN(authorize.subnet);
-  encodeSignature(sia, authorize.proof);
   return sia;
 }
 
@@ -137,20 +145,17 @@ export function decodeAuthorize(sia: Sia): Authorize {
   return {
     user: sia.readByteArrayN(32),
     subnet: sia.readByteArrayN(32),
-    proof: decodeSignature(sia),
   };
 }
 
 export interface UnAuthorize {
   user: Uint8Array | Buffer;
   subnet: Uint8Array | Buffer;
-  proof: Signature;
 }
 
 export function encodeUnAuthorize(sia: Sia, unAuthorize: UnAuthorize): Sia {
   sia.addByteArrayN(unAuthorize.user);
   sia.addByteArrayN(unAuthorize.subnet);
-  encodeSignature(sia, unAuthorize.proof);
   return sia;
 }
 
@@ -158,7 +163,6 @@ export function decodeUnAuthorize(sia: Sia): UnAuthorize {
   return {
     user: sia.readByteArrayN(32),
     subnet: sia.readByteArrayN(32),
-    proof: decodeSignature(sia),
   };
 }
 
@@ -244,4 +248,74 @@ export function decodeSuccess(sia: Sia): Success {
     error: sia.readUInt16(),
     status: sia.readBool(),
   };
+}
+
+export interface Status {
+  ok: boolean;
+}
+
+export function encodeStatus(sia: Sia, status: Status): Sia {
+  sia.addBool(status.ok);
+  return sia;
+}
+
+export function decodeStatus(sia: Sia): Status {
+  return {
+    ok: sia.readBool(),
+  };
+}
+
+export class Admin {
+  private methods: Map<string, Function> = new Map();
+  private pluginName = "swiss.timeleap.admin.v1";
+
+  constructor(private client: Client) {}
+
+  static connect(client: Client): Admin {
+    return new Admin(client);
+  }
+
+  private getMethod(
+    method: string,
+    timeout: number,
+    fee: { currency: string; amount: number },
+  ): Function {
+    if (!this.methods.has(method)) {
+      this.methods.set(
+        method,
+        this.client.method({
+          plugin: this.pluginName,
+          method,
+          timeout,
+          fee,
+        }),
+      );
+    }
+    return this.methods.get(method)!;
+  }
+
+  public async credit(sia: Sia, credit: Credit): Promise<Status> {
+    encodeCredit(sia, credit);
+    const method = this.getMethod("credit", 10000, {
+      currency: "TLP",
+      amount: 0,
+    });
+    const response = await method.populate(sia).invoke();
+    const value = decodeStatus(response);
+    return value;
+  }
+
+  public async updateSubnet(
+    sia: Sia,
+    updateSubnet: UpdateSubnet,
+  ): Promise<Status> {
+    encodeUpdateSubnet(sia, updateSubnet);
+    const method = this.getMethod("updateSubnet", 10000, {
+      currency: "TLP",
+      amount: 0,
+    });
+    const response = await method.populate(sia).invoke();
+    const value = decodeStatus(response);
+    return value;
+  }
 }

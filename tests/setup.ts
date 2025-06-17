@@ -9,7 +9,7 @@ export const mockSubnet: Subnet = {
   subnet: new Uint8Array([1, 2, 3]),
   name: "test-subnet",
   delegates: [new Uint8Array([1, 2, 3])],
-  stakeUser: "stake-user",
+  stakeUser: new Uint8Array([4, 5, 6]),
   stakeAmount: 100,
   stakeExpiration: new Date(),
 };

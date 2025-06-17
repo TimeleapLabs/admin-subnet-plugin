@@ -6,7 +6,7 @@ import type {
   Refund,
   Authorize,
   UnAuthorize,
-} from "@model/accounting.js";
+} from "@/model/admin.js";
 
 export type User = {
   user: Uint8Array;
@@ -57,7 +57,7 @@ export type Subnet = {
   subnet: Uint8Array;
   name: string;
   delegates: Uint8Array[];
-  stakeUser: string;
+  stakeUser: Uint8Array;
   stakeAmount: number;
   stakeExpiration: Date;
 };

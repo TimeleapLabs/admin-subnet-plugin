@@ -120,7 +120,6 @@ Create a `.env` file in the project root with the following values:
 
 ```
 PLUGIN_PRIVATE_KEY=         # Private key used to sign accounting responses
-WORKER_PUBLIC_KEY=          # Public key of the Timeleap RPC runtime
 MONGODB_URI=                # MongoDB connection string for balance and log storage
 ```
 
