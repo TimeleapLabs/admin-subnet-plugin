@@ -1,11 +1,12 @@
 import { WebSocketServer } from "ws";
 import { Sia } from "@timeleap/sia";
 import { config } from "dotenv";
-import { Wallet, Identity } from "@timeleap/client";
+import { Wallet, Identity, OpCodes } from "@timeleap/client";
 import { credit, debit, refund, authorize, unauthorize } from "@lib/rpc.js";
 import { logger } from "@lib/logging.js";
 
 import * as calls from "@lib/calls.js";
+import * as app from "@lib/app.js";
 
 import {
   decodeAuthorize,
@@ -38,7 +39,17 @@ wss.on("connection", (ws) => {
     }
 
     const sia = new Sia(buf);
-    const { uuid, plugin, method } = decodeFunctionCall(sia.skip(1));
+    const { opcode, appId, uuid, plugin, method } = decodeFunctionCall(sia);
+
+    if (appId !== app.appId) {
+      logger.error("Invalid appId:", appId);
+      return await sendError(ws, 404, uuid);
+    }
+
+    if (opcode !== OpCodes.RPCRequest) {
+      logger.error("Invalid opcode:", opcode);
+      return await sendError(ws, 404, uuid);
+    }
 
     if (plugin !== PLUGIN_NAME) {
       logger.error("Invalid plugin:", plugin);
@@ -56,7 +67,7 @@ wss.on("connection", (ws) => {
           if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
-          await credit(record);
+          await credit(record, uuid);
           await sendSuccess(ws, uuid);
           break;
         }
@@ -68,7 +79,7 @@ wss.on("connection", (ws) => {
           if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
-          await debit(record);
+          await debit(record, uuid);
           await sendSuccess(ws, uuid);
           break;
         }
@@ -80,7 +91,7 @@ wss.on("connection", (ws) => {
           if (!(await verifySignature(ws, paramsBuf, record.proof))) {
             return;
           }
-          await refund(record);
+          await refund(record, uuid);
           await sendSuccess(ws, uuid);
           break;
         }

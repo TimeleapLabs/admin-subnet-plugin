@@ -25,12 +25,13 @@ import { checkSigner } from "@lib/check.js";
 /**
  * @description Credit user balance
  * @param credit Credit transaction
+ * @param uuid Unique identifier for the transaction
  * @notes This function is used to credit a user's balance in the database.
  *        It uses a MongoDB transaction to ensure that both the balance update
  *        and the transaction record are atomic. If either operation fails,
  *        the entire transaction is rolled back.
  */
-export const credit = async (credit: Credit) => {
+export const credit = async (credit: Credit, uuid: Uint8Array) => {
   const client = await getClient();
   const session = client.startSession();
 
@@ -46,7 +47,7 @@ export const credit = async (credit: Credit) => {
         session,
       );
 
-      await recordCredit(credit, session);
+      await recordCredit(credit, uuid, session);
     });
   } finally {
     session.endSession();
@@ -56,12 +57,13 @@ export const credit = async (credit: Credit) => {
 /**
  * @description Debit user balance
  * @param debit Debit transaction
+ * @param uuid Unique identifier for the transaction
  * @notes This function is used to debit a user's balance in the database.
  *        It uses a MongoDB transaction to ensure that both the balance update
  *        and the transaction record are atomic. If either operation fails,
  *        the entire transaction is rolled back.
  */
-export const debit = async (debit: Debit) => {
+export const debit = async (debit: Debit, uuid: Uint8Array) => {
   const client = await getClient();
   const session = client.startSession();
 
@@ -77,7 +79,7 @@ export const debit = async (debit: Debit) => {
         session,
       );
 
-      await recordDebit(debit, session);
+      await recordDebit(debit, uuid, session);
     });
   } finally {
     session.endSession();
@@ -87,19 +89,20 @@ export const debit = async (debit: Debit) => {
 /**
  * @description Refund user balance
  * @param refund Refund transaction
+ * @param uuid Unique identifier for the transaction
  * @notes This function is used to refund a user's balance in the database.
  *        It uses a MongoDB transaction to ensure that both the balance update
  *        and the transaction record are atomic. If either operation fails,
  *        the entire transaction is rolled back.
  */
-export const refund = async (refund: Refund) => {
+export const refund = async (refund: Refund, uuid: Uint8Array) => {
   const client = await getClient();
   const session = client.startSession();
 
   try {
     await session.withTransaction(async () => {
       await checkSigner(refund.subnet, refund.proof.signer, session);
-      await safeRecordRefund(refund, session);
+      await safeRecordRefund(refund, uuid, session);
 
       await incUserBalance(
         refund.user,

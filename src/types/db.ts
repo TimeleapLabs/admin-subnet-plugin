@@ -19,16 +19,19 @@ export type UserDocument = WithId<User>;
 
 export interface DebitTransaction extends Debit {
   type: "debit";
+  uuid: Uint8Array;
   createdAt: Date;
 }
 
 export interface CreditTransaction extends Credit {
   type: "credit";
+  uuid: Uint8Array;
   createdAt: Date;
 }
 
 export interface RefundTransaction extends Refund {
   type: "refund";
+  uuid: Uint8Array;
   createdAt: Date;
 }
 

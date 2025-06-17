@@ -146,12 +146,13 @@ export const safeDecUserBalance = async (
  */
 export const recordCredit = async (
   credit: Credit,
+  uuid: Uint8Array,
   session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<CreditTransaction>> => {
   const db = await getDb();
   const collection = db.collection<CreditTransaction>("transactions");
   return await collection.insertOne(
-    { ...credit, type: "credit", createdAt: new Date() },
+    { ...credit, uuid, type: "credit", createdAt: new Date() },
     { session },
   );
 };
@@ -164,12 +165,13 @@ export const recordCredit = async (
  */
 export const recordDebit = async (
   debit: Debit,
+  uuid: Uint8Array,
   session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<DebitTransaction>> => {
   const db = await getDb();
   const collection = db.collection<DebitTransaction>("transactions");
   return await collection.insertOne(
-    { ...debit, type: "debit", createdAt: new Date() },
+    { ...debit, uuid, type: "debit", createdAt: new Date() },
     { session },
   );
 };
@@ -183,6 +185,7 @@ export const recordDebit = async (
  */
 export const safeRecordRefund = async (
   refund: Refund,
+  uuid: Uint8Array,
   session: Maybe<ClientSession> = undefined,
   check: boolean = true,
 ): Promise<InsertOneResult<RefundTransaction>> => {
@@ -205,7 +208,7 @@ export const safeRecordRefund = async (
   }
 
   return await collection.insertOne(
-    { ...refund, type: "refund", createdAt: new Date() },
+    { ...refund, uuid, type: "refund", createdAt: new Date() },
     { session },
   );
 };

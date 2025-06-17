@@ -16,7 +16,6 @@ describe("Accounting transactions", () => {
     const subnet = mockSubnet.subnet;
 
     const creditTransaction = {
-      uuid,
       user,
       subnet,
       amount,
@@ -24,7 +23,7 @@ describe("Accounting transactions", () => {
       proof,
     };
 
-    await credit(creditTransaction);
+    await credit(creditTransaction, uuid);
 
     const { balance } = (await getUserBalance(user, currency, subnet)) ?? {
       balance: 0,
@@ -48,7 +47,6 @@ describe("Accounting transactions", () => {
     const subnet = mockSubnet.subnet;
 
     const debitTransaction = {
-      uuid,
       user,
       proof,
       amount,
@@ -56,7 +54,7 @@ describe("Accounting transactions", () => {
       subnet,
     };
 
-    await debit(debitTransaction);
+    await debit(debitTransaction, uuid);
 
     const { balance } = (await getUserBalance(
       user.signer,
@@ -80,7 +78,6 @@ describe("Accounting transactions", () => {
     const currency = "USD";
 
     const refundTransaction = {
-      uuid,
       user,
       debit,
       subnet,
@@ -89,7 +86,7 @@ describe("Accounting transactions", () => {
       proof,
     };
 
-    await refund(refundTransaction);
+    await refund(refundTransaction, uuid);
 
     const { balance } = (await getUserBalance(user, currency, subnet)) ?? {
       balance: 0,
@@ -111,7 +108,6 @@ describe("Accounting transactions", () => {
     const subnet = mockSubnet.subnet;
 
     const refundTransaction = {
-      uuid,
       debit,
       user,
       subnet,
@@ -120,7 +116,7 @@ describe("Accounting transactions", () => {
       proof,
     };
 
-    await expect(refund(refundTransaction)).rejects.toThrow(
+    await expect(refund(refundTransaction, uuid)).rejects.toThrow(
       "Debit transaction not found",
     );
   });
@@ -138,7 +134,6 @@ describe("Accounting transactions", () => {
     const subnet = mockSubnet.subnet;
 
     const refundTransaction = {
-      uuid,
       user,
       debit,
       subnet,
@@ -147,7 +142,7 @@ describe("Accounting transactions", () => {
       proof,
     };
 
-    await expect(refund(refundTransaction)).rejects.toThrow(
+    await expect(refund(refundTransaction, uuid)).rejects.toThrow(
       "Debit transaction not found",
     );
   });
@@ -165,7 +160,6 @@ describe("Accounting transactions", () => {
     const currency = "USD";
 
     const refundTransaction = {
-      uuid,
       user,
       debit,
       subnet,
@@ -174,7 +168,7 @@ describe("Accounting transactions", () => {
       proof,
     };
 
-    await expect(refund(refundTransaction)).rejects.toThrow(
+    await expect(refund(refundTransaction, uuid)).rejects.toThrow(
       "Debit transaction not found",
     );
   });

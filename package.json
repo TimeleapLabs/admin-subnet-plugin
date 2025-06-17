@@ -2,7 +2,7 @@
   "name": "admin-subnet-plugin",
   "packageManager": "yarn@4.9.1",
   "dependencies": {
-    "@timeleap/client": "^1.4.2",
+    "@timeleap/client": "^1.5.0",
     "@timeleap/sia": "^2.2.2",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",

@@ -1188,15 +1188,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@timeleap/client@npm:^1.4.2":
-  version: 1.4.2
-  resolution: "@timeleap/client@npm:1.4.2"
+"@timeleap/client@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@timeleap/client@npm:1.5.0"
   dependencies:
     "@noble/ed25519": "npm:^2.2.3"
     "@scure/base": "npm:^1.2.4"
     "@timeleap/sia": "npm:^2.2.2"
     uuidv7: "npm:^1.0.2"
-  checksum: 10c0/add450aa118dc271e116558703211a24b07c8f1dd07425bee199a9f116f04524d75569c0f1bcb773ebad7deab9dace7578bd5be6db7887055ba1379265a662b8
+  checksum: 10c0/cd0b7d7a11d2ea10fc3226eadf8a21e08966487ed62ae46acaa3218f0260d00a792619852f75f232db9c958b64368c7d1dab90b5feb27c9721767e644450e3bd
   languageName: node
   linkType: hard
 
@@ -1578,7 +1578,7 @@ __metadata:
   resolution: "admin-subnet-plugin@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.26.0"
-    "@timeleap/client": "npm:^1.4.2"
+    "@timeleap/client": "npm:^1.5.0"
     "@timeleap/sia": "npm:^2.2.2"
     "@timeleap/sia-schema": "npm:^1.7.0"
     "@types/jest": "npm:^29.5.14"

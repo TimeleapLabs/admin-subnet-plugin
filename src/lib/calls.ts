@@ -1,6 +1,7 @@
 import { encodeError, encodeSuccess, Signature } from "@model/accounting.js";
 import { Identity, Wallet, OpCodes } from "@timeleap/client";
 import { Sia } from "@timeleap/sia";
+import { appId } from "./app.js";
 
 import WebSocket from "ws";
 import { logger } from "./logging.js";
@@ -13,6 +14,7 @@ export const wrap = (wallet: Wallet) => {
   ) => {
     const error = encodeError(Sia.alloc(512), {
       opcode: OpCodes.RPCResponse,
+      appId,
       error: errorCode,
       uuid,
     });
@@ -23,6 +25,7 @@ export const wrap = (wallet: Wallet) => {
   const sendSuccess = async (ws: WebSocket, uuid: Uint8Array) => {
     const success = encodeSuccess(Sia.alloc(512), {
       opcode: OpCodes.RPCResponse,
+      appId,
       uuid,
       status: true,
     });

@@ -37,7 +37,6 @@ export function decodeFee(sia: Sia): Fee {
 }
 
 export interface Credit {
-  uuid: Uint8Array | Buffer;
   amount: number;
   currency: string;
   user: Uint8Array | Buffer;
@@ -46,7 +45,6 @@ export interface Credit {
 }
 
 export function encodeCredit(sia: Sia, credit: Credit): Sia {
-  sia.addByteArray8(credit.uuid);
   sia.addUInt64(credit.amount);
   sia.addString8(credit.currency);
   sia.addByteArrayN(credit.user);
@@ -57,7 +55,6 @@ export function encodeCredit(sia: Sia, credit: Credit): Sia {
 
 export function decodeCredit(sia: Sia): Credit {
   return {
-    uuid: sia.readByteArray8(),
     amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: sia.readByteArrayN(32),
@@ -67,7 +64,6 @@ export function decodeCredit(sia: Sia): Credit {
 }
 
 export interface Refund {
-  uuid: Uint8Array | Buffer;
   debit: Uint8Array | Buffer;
   amount: number;
   currency: string;
@@ -77,7 +73,6 @@ export interface Refund {
 }
 
 export function encodeRefund(sia: Sia, refund: Refund): Sia {
-  sia.addByteArray8(refund.uuid);
   sia.addByteArray8(refund.debit);
   sia.addUInt64(refund.amount);
   sia.addString8(refund.currency);
@@ -89,7 +84,6 @@ export function encodeRefund(sia: Sia, refund: Refund): Sia {
 
 export function decodeRefund(sia: Sia): Refund {
   return {
-    uuid: sia.readByteArray8(),
     debit: sia.readByteArray8(),
     amount: sia.readUInt64(),
     currency: sia.readString8(),
@@ -100,7 +94,6 @@ export function decodeRefund(sia: Sia): Refund {
 }
 
 export interface Debit {
-  uuid: Uint8Array | Buffer;
   amount: number;
   currency: string;
   user: Signature;
@@ -109,7 +102,6 @@ export interface Debit {
 }
 
 export function encodeDebit(sia: Sia, debit: Debit): Sia {
-  sia.addByteArray8(debit.uuid);
   sia.addUInt64(debit.amount);
   sia.addString8(debit.currency);
   encodeSignature(sia, debit.user);
@@ -120,7 +112,6 @@ export function encodeDebit(sia: Sia, debit: Debit): Sia {
 
 export function decodeDebit(sia: Sia): Debit {
   return {
-    uuid: sia.readByteArray8(),
     amount: sia.readUInt64(),
     currency: sia.readString8(),
     user: decodeSignature(sia),
@@ -172,6 +163,8 @@ export function decodeUnAuthorize(sia: Sia): UnAuthorize {
 }
 
 export interface FunctionCall {
+  opcode: number;
+  appId: number;
   uuid: Uint8Array | Buffer;
   plugin: string;
   method: string;
@@ -180,6 +173,8 @@ export interface FunctionCall {
 }
 
 export function encodeFunctionCall(sia: Sia, functionCall: FunctionCall): Sia {
+  sia.addUInt8(functionCall.opcode);
+  sia.addUInt64(functionCall.appId);
   sia.addByteArray8(functionCall.uuid);
   sia.addString8(functionCall.plugin);
   sia.addString8(functionCall.method);
@@ -190,6 +185,8 @@ export function encodeFunctionCall(sia: Sia, functionCall: FunctionCall): Sia {
 
 export function decodeFunctionCall(sia: Sia): FunctionCall {
   return {
+    opcode: sia.readUInt8(),
+    appId: sia.readUInt64(),
     uuid: sia.readByteArray8(),
     plugin: sia.readString8(),
     method: sia.readString8(),
@@ -200,12 +197,14 @@ export function decodeFunctionCall(sia: Sia): FunctionCall {
 
 export interface Error {
   opcode: number;
+  appId: number;
   uuid: Uint8Array | Buffer;
   error: number;
 }
 
 export function encodeError(sia: Sia, error: Error): Sia {
   sia.addUInt8(error.opcode);
+  sia.addUInt64(error.appId);
   sia.addByteArray8(error.uuid);
   sia.addUInt16(error.error);
   return sia;
@@ -214,6 +213,7 @@ export function encodeError(sia: Sia, error: Error): Sia {
 export function decodeError(sia: Sia): Error {
   return {
     opcode: sia.readUInt8(),
+    appId: sia.readUInt64(),
     uuid: sia.readByteArray8(),
     error: sia.readUInt16(),
   };
@@ -221,6 +221,7 @@ export function decodeError(sia: Sia): Error {
 
 export interface Success {
   opcode: number;
+  appId: number;
   uuid: Uint8Array | Buffer;
   error?: number;
   status: boolean;
@@ -228,6 +229,7 @@ export interface Success {
 
 export function encodeSuccess(sia: Sia, success: Success): Sia {
   sia.addUInt8(success.opcode);
+  sia.addUInt64(success.appId);
   sia.addByteArray8(success.uuid);
   sia.addUInt16(success.error ?? 0);
   sia.addBool(success.status);
@@ -237,6 +239,7 @@ export function encodeSuccess(sia: Sia, success: Success): Sia {
 export function decodeSuccess(sia: Sia): Success {
   return {
     opcode: sia.readUInt8(),
+    appId: sia.readUInt64(),
     uuid: sia.readByteArray8(),
     error: sia.readUInt16(),
     status: sia.readBool(),
