@@ -318,4 +318,29 @@ export class Admin {
     const value = decodeStatus(response);
     return value;
   }
+
+  public async authorize(sia: Sia, authorize: Authorize): Promise<Status> {
+    encodeAuthorize(sia, authorize);
+    const method = this.getMethod("authorize", 10000, {
+      currency: "TLP",
+      amount: 0,
+    });
+    const response = await method.populate(sia).invoke();
+    const value = decodeStatus(response);
+    return value;
+  }
+
+  public async unAuthorize(
+    sia: Sia,
+    unAuthorize: UnAuthorize,
+  ): Promise<Status> {
+    encodeUnAuthorize(sia, unAuthorize);
+    const method = this.getMethod("unAuthorize", 10000, {
+      currency: "TLP",
+      amount: 0,
+    });
+    const response = await method.populate(sia).invoke();
+    const value = decodeStatus(response);
+    return value;
+  }
 }

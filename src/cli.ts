@@ -3,14 +3,8 @@ import { Sia } from "@timeleap/sia";
 import { config } from "dotenv";
 import { Client, Identity, Wallet } from "@timeleap/client";
 
-import {
-  Admin,
-  Credit,
-  encodeCredit,
-  encodeUpdateSubnet,
-  UpdateSubnet,
-} from "@model/admin.js";
-import { logger } from "./lib/logging.js";
+import { Admin, Authorize, Credit, UpdateSubnet } from "@model/admin.js";
+import { logger } from "@lib/logging.js";
 
 const program = new Command();
 
@@ -77,6 +71,33 @@ program
       result.ok
         ? "Update subnet transaction successful"
         : "Update subnet transaction failed",
+    );
+
+    client.close();
+  });
+
+program
+  .command("authorize")
+  .description("Add a delegate to a subnet")
+  .requiredOption("-s, --subnet <subnet>", "Subnet identifier")
+  .requiredOption("-u, --user <user>", "User's public key")
+  .action(async (options) => {
+    const { subnet, user } = options;
+    const admin = Admin.connect(client);
+    const subnetIdentity = await Identity.fromBase58(subnet);
+    const userIdentity = await Identity.fromBase58(user);
+
+    const record: Authorize = {
+      subnet: subnetIdentity.publicKey,
+      user: userIdentity.publicKey,
+    };
+
+    const result = await admin.authorize(Sia.alloc(1024), record);
+
+    logger.info(
+      result.ok
+        ? "Authorization transaction successful"
+        : "Authorization transaction failed",
     );
 
     client.close();

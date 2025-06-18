@@ -134,4 +134,6 @@ schema Status {
 plugin swiss.timeleap.admin.v1 as Admin {
   method credit(timeout = 10000, fee = 0, currency = "TLP") Credit returns Status
   method updateSubnet(timeout = 10000, fee = 0, currency = "TLP") UpdateSubnet returns Status
+  method authorize(timeout = 10000, fee = 0, currency = "TLP") Authorize returns Status
+  method unAuthorize(timeout = 10000, fee = 0, currency = "TLP") UnAuthorize returns Status
 }

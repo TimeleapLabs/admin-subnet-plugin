@@ -348,7 +348,7 @@ export const upsertSubnet = async (
     { subnet: update.subnet },
     {
       $set: { stakeUser: update.stakeUser, updatedAt: new Date() },
-      $addToSet: { delegates: user },
+      $addToSet: { delegates: { $each: [user, update.subnet] } },
     },
     { session, upsert: true },
   );
