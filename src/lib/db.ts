@@ -339,13 +339,17 @@ export const removeDelegateFromSubnet = async (
 
 export const upsertSubnet = async (
   update: UpdateSubnet,
+  user: Uint8Array,
   session: Maybe<ClientSession> = undefined,
 ): Promise<UpdateResult<Subnet>> => {
   const db = await getDb();
   const collection = db.collection<Subnet>("subnets");
   return await collection.updateOne(
     { subnet: update.subnet },
-    { $set: { stakeUser: update.stakeUser, updatedAt: new Date() } },
+    {
+      $set: { stakeUser: update.stakeUser, updatedAt: new Date() },
+      $addToSet: { delegates: user },
+    },
     { session, upsert: true },
   );
 };

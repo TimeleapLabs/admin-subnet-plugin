@@ -195,5 +195,5 @@ export const updateSubnet = async (
 ) => {
   // TODO: Fetch stake information and validate it
   // No need for a transaction here as we are only updating the subnet
-  await upsertSubnet(updateSubnet);
+  await upsertSubnet(updateSubnet, signer);
 };

@@ -37,10 +37,11 @@ program
   .action(async (options) => {
     const { user, currency, subnet, amount } = options;
     const admin = Admin.connect(client);
+    const userIdentity = await Identity.fromBase58(user);
     const subnetIdentity = await Identity.fromBase58(subnet);
 
     const record: Credit = {
-      user: new Uint8Array(Buffer.from(user, "hex")),
+      user: userIdentity.publicKey,
       currency,
       subnet: subnetIdentity.publicKey,
       amount: parseInt(amount),
