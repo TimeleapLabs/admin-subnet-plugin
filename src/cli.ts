@@ -5,6 +5,7 @@ import { Client, Identity, Wallet } from "@timeleap/client";
 
 import { Admin, Authorize, Credit, UpdateSubnet } from "@model/admin.js";
 import { logger } from "@lib/logging.js";
+import { stake, unstake, link } from "@lib/blockchain.js";
 
 const program = new Command();
 
@@ -101,6 +102,77 @@ program
     );
 
     client.close();
+  });
+
+program
+  .command("unauthorize")
+  .description("Remove a delegate from a subnet")
+  .requiredOption("-s, --subnet <subnet>", "Subnet identifier")
+  .requiredOption("-u, --user <user>", "User's public key")
+  .action(async (options) => {
+    const { subnet, user } = options;
+    const admin = Admin.connect(client);
+    const subnetIdentity = await Identity.fromBase58(subnet);
+    const userIdentity = await Identity.fromBase58(user);
+
+    const record: Authorize = {
+      subnet: subnetIdentity.publicKey,
+      user: userIdentity.publicKey,
+    };
+
+    const result = await admin.unAuthorize(Sia.alloc(1024), record);
+
+    logger.info(
+      result.ok
+        ? "Unauthorization transaction successful"
+        : "Unauthorization transaction failed",
+    );
+
+    client.close();
+  });
+
+program
+  .command("stake")
+  .description("Stake KNS tokens")
+  .requiredOption("-a, --amount <amount>", "Amount of KNS to stake")
+  .requiredOption("-d, --days <days>", "Number of days to stake")
+  .option("-n, --nft-id <nftId>", "NFT ID to stake with")
+  .action(async (options) => {
+    const { amount, days, nftId } = options;
+
+    try {
+      await stake(amount, parseInt(days), nftId ? parseInt(nftId) : undefined);
+      logger.info("Stake transaction successful");
+    } catch (error) {
+      logger.error("Stake transaction failed:", error);
+    }
+  });
+
+program
+  .command("unstake")
+  .description("Unstake KNS tokens")
+  .action(async () => {
+    try {
+      await unstake();
+      logger.info("Unstake transaction successful");
+    } catch (error) {
+      logger.error("Unstake transaction failed:", error);
+    }
+  });
+
+program
+  .command("link")
+  .description("Link a subnet to a staking address")
+  .requiredOption("-s, --subnet <subnetId>", "Subnet identifier")
+  .action(async (options) => {
+    const { subnet } = options;
+
+    try {
+      await link(subnet);
+      logger.info("Link transaction successful");
+    } catch (error) {
+      logger.error("Link transaction failed:", error);
+    }
   });
 
 program.parse();

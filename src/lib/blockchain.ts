@@ -11,8 +11,10 @@ import {
   Linker__factory,
 } from "@timeleap/subnet-contracts-sdk/typechain";
 
-const providerAddress = process.env.EVM_RPC_ADDRESS;
 const privateKey = process.env.EVM_PRIVATE_KEY;
+
+const providerAddress =
+  process.env.EVM_RPC_ADDRESS || "https://arb1.arbitrum.io/rpc";
 
 const managerAddress =
   process.env.MANAGER_CONTRACT_ADDRESS ||
