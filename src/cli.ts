@@ -14,8 +14,12 @@ config();
 const uri = process.env.ADMIN_BROKER_URI!;
 const publicKey = process.env.ADMIN_BROKER_PUBLIC_KEY!;
 
-const wallet = await Wallet.fromBase58(process.env.ADMIN_CLIENT_PRIVATE_KEY!);
-const client = await Client.connect(wallet, { uri, publicKey });
+const getClient = async (): Promise<Client> => {
+  const wallet = await Wallet.fromBase58(process.env.ADMIN_CLIENT_PRIVATE_KEY!);
+  const client = await Client.connect(wallet, { uri, publicKey });
+
+  return client;
+};
 
 program
   .name("tl-admin")
@@ -31,6 +35,8 @@ program
   .requiredOption("-a, --amount <amount>", "Amount to credit")
   .action(async (options) => {
     const { user, currency, subnet, amount } = options;
+
+    const client = await getClient();
     const admin = Admin.connect(client);
     const userIdentity = await Identity.fromBase58(user);
     const subnetIdentity = await Identity.fromBase58(subnet);
@@ -58,6 +64,8 @@ program
   .requiredOption("-u, --stake-user <stakeUser>", "Stake user's EVM address")
   .action(async (options) => {
     const { subnet, stakeUser } = options;
+
+    const client = await getClient();
     const admin = Admin.connect(client);
     const subnetIdentity = await Identity.fromBase58(subnet);
 
@@ -84,6 +92,8 @@ program
   .requiredOption("-u, --user <user>", "User's public key")
   .action(async (options) => {
     const { subnet, user } = options;
+
+    const client = await getClient();
     const admin = Admin.connect(client);
     const subnetIdentity = await Identity.fromBase58(subnet);
     const userIdentity = await Identity.fromBase58(user);
@@ -111,6 +121,8 @@ program
   .requiredOption("-u, --user <user>", "User's public key")
   .action(async (options) => {
     const { subnet, user } = options;
+
+    const client = await getClient();
     const admin = Admin.connect(client);
     const subnetIdentity = await Identity.fromBase58(subnet);
     const userIdentity = await Identity.fromBase58(user);

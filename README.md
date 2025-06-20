@@ -119,9 +119,44 @@ yarn start
 Create a `.env` file in the project root with the following values:
 
 ```
-PLUGIN_PRIVATE_KEY=         # Private key used to sign accounting responses
+SUBNET_PRIVATE_KEY=         # Private key used to sign admin responses
+TIMELEAP_APP_ID=            # Admin subnet App ID
 MONGODB_URI=                # MongoDB connection string for balance and log storage
+ADMIN_SUBNET_PORT=          # Subnet server port to listen to
+
+# CLI
+ADMIN_CLIENT_PRIVATE_KEY=   # Private key to use for communicating with the admin subnet
+ADMIN_BROKER_URI=           # Admin subnet broker URI
+ADMIN_BROKER_PUBLIC_KEY=    # Admin subnet broker public key
+EVM_PRIVATE_KEY=            # EVM private key for staking & linking
+EVM_RPC_ADDRESS             # EVM JSON-RPC address (optional)
 ```
+
+## 🤖 CLI
+
+To install the `tl-admin` CLI, run:
+
+```
+npm i -g @timeleap/admin
+```
+
+The following commands are available for communicating with the Admin subnet:
+
+- `credit`: Credit a user's balance
+- `update-subnet`: Update subnet information
+- `authorize`: Add a delegate to a subnet
+- `unauthorize`: Remove a delegate from a subnet
+- `stake`: Stake KNS tokens
+- `unstake`: Unstake KNS tokens
+- `link`: Link a subnet to a staking address
+
+To register a subnet, the following steps are required:
+
+1. Use the `stake` command KNS tokens
+2. Use the `link` command to link your stake with your subnet ID
+3. Use the `update-subnet` command to submit your subnet information
+4. Use the `authorize` command to authorize each one of your subnet server
+   public keys to communicate with the Admin subnet on your behalf
 
 ## 🥭 Indexes
 

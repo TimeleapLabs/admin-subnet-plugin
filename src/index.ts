@@ -54,10 +54,10 @@ const handler = (req: IncomingMessage, res: ServerResponse) => {
   }
 };
 
-const port = parseInt(process.env.ADMIN_PLUGIN_PORT || "9123", 10);
+const port = parseInt(process.env.ADMIN_SUBNET_PORT || "9123", 10);
 const server = createServer(handler);
 const wss = new WebSocketServer({ server, path: `/${app.protocolVersion}` });
-const wallet = await Wallet.fromBase58(process.env.PLUGIN_PRIVATE_KEY!);
+const wallet = await Wallet.fromBase58(process.env.SUBNET_PRIVATE_KEY!);
 
 logger.info(`Subnet public key: ${wallet.toBase58().publicKey}`);
 
