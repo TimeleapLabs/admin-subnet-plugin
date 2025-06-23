@@ -1,5 +1,6 @@
 {
   "name": "@timeleap/admin",
+  "version": "1.0.0",
   "packageManager": "yarn@4.9.1",
   "dependencies": {
     "@timeleap/client": "^1.5.1",
@@ -52,6 +53,6 @@
     "yarn": ">=4.0.0"
   },
   "bin": {
-    "tl-admin": "dist/src/index.js"
+    "tl-admin": "dist/src/cli.js"
   }
 }
