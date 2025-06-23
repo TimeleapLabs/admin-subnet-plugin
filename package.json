@@ -46,7 +46,8 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "prettier": "prettier --write .",
     "prettier:check": "prettier --check .",
-    "test": "node --no-warnings=ExperimentalWarning --experimental-vm-modules $(yarn bin jest) --runInBand"
+    "test": "node --no-warnings=ExperimentalWarning --experimental-vm-modules $(yarn bin jest) --runInBand",
+    "prepublishOnly": "yarn build"
   },
   "engines": {
     "node": ">=22.0.0",
