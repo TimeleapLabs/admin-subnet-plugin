@@ -187,4 +187,11 @@ program
     }
   });
 
+program
+  .command("subnet")
+  .description("Run the Admin subnet")
+  .action(async () => {
+    await import("./index.js");
+  });
+
 program.parse();

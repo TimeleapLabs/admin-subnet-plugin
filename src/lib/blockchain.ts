@@ -45,12 +45,14 @@ const katanaAddress =
  * @throws {Error} If the EVM_RPC_ADDRESS or EVM_PRIVATE_KEY environment variables are not set.
  */
 export const getManager = async (): Promise<Manager> => {
-  if (!providerAddress || !privateKey) {
+  if (!providerAddress) {
     throw new Error("EVM_RPC_ADDRESS and EVM_PRIVATE_KEY must be set");
   }
 
   const provider = new JsonRpcProvider(providerAddress);
-  const wallet = new Wallet(privateKey, provider);
+  const wallet = privateKey
+    ? new Wallet(privateKey, provider)
+    : Wallet.createRandom(provider);
 
   const manager = Manager__factory.connect(managerAddress, wallet);
   return manager;
