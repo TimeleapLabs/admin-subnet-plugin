@@ -43,5 +43,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ steps.vars.outputs.owner_lc }}:latest
-            ${{ startsWith(github.ref, 'refs/tags/') && format('ghcr.io/{0}:{1}', steps.vars.outputs.owner_lc, steps.tag.outputs.TAG) || '' }}
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/{{ github.repository	}}:latest
+            ${{ startsWith(github.ref, 'refs/tags/') && format('ghcr.io/{0}:{1}', steps.vars.outputs.owner_lc, github.repository , steps.tag.outputs.TAG) || '' }}
