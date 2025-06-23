@@ -20,6 +20,7 @@ import {
   upsertSubnet,
 } from "@lib/db.js";
 import { checkSigner } from "@lib/check.js";
+import { getLink } from "./blockchain.js";
 
 /**
  * @description Credit user balance
@@ -193,7 +194,13 @@ export const updateSubnet = async (
   updateSubnet: UpdateSubnet,
   signer: Uint8Array,
 ) => {
-  // TODO: Fetch stake information and validate it
+  const user = "0x" + Buffer.from(updateSubnet.stakeUser).toString("hex");
+  const link = await getLink(user);
+
+  if (link !== Buffer.from(updateSubnet.subnet).toString("hex")) {
+    throw new Error("Invalid subnet link");
+  }
+
   // No need for a transaction here as we are only updating the subnet
   await upsertSubnet(updateSubnet, signer);
 };

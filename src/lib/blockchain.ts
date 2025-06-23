@@ -4,11 +4,18 @@ import { logger } from "./logging.js";
 
 import * as sdk from "@timeleap/subnet-contracts-sdk";
 
-import type { Manager, Linker } from "@timeleap/subnet-contracts-sdk/typechain";
+import type {
+  Manager,
+  Linker,
+  MockERC20,
+  MockERC721,
+} from "@timeleap/subnet-contracts-sdk/typechain";
 
 import {
   Manager__factory,
   Linker__factory,
+  MockERC20__factory,
+  MockERC721__factory,
 } from "@timeleap/subnet-contracts-sdk/typechain";
 
 const privateKey = process.env.EVM_PRIVATE_KEY;
@@ -24,6 +31,19 @@ const linkerAddress =
   process.env.LINKER_CONTRACT_ADDRESS ||
   "0x0000000000000000000000000000000000000000";
 
+const knsAddress =
+  process.env.KNS_CONTRACT_ADDRESS ||
+  "0x0000000000000000000000000000000000000000";
+
+const katanaAddress =
+  process.env.KATANA_CONTRACT_ADDRESS ||
+  "0x0000000000000000000000000000000000000000";
+
+/**
+ * Get the Manager contract instance.
+ * @returns {Promise<Manager>} A promise that resolves to the Manager contract instance.
+ * @throws {Error} If the EVM_RPC_ADDRESS or EVM_PRIVATE_KEY environment variables are not set.
+ */
 export const getManager = async (): Promise<Manager> => {
   if (!providerAddress || !privateKey) {
     throw new Error("EVM_RPC_ADDRESS and EVM_PRIVATE_KEY must be set");
@@ -36,6 +56,11 @@ export const getManager = async (): Promise<Manager> => {
   return manager;
 };
 
+/**
+ * Get the Linker contract instance.
+ * @returns {Promise<Linker>} A promise that resolves to the Linker contract instance.
+ * @throws {Error} If the EVM_RPC_ADDRESS or EVM_PRIVATE_KEY environment variables are not set.
+ */
 export const getLinker = async (): Promise<Linker> => {
   if (!providerAddress || !privateKey) {
     throw new Error("EVM_RPC_ADDRESS and EVM_PRIVATE_KEY must be set");
@@ -46,6 +71,69 @@ export const getLinker = async (): Promise<Linker> => {
 
   const linker = Linker__factory.connect(linkerAddress, wallet);
   return linker;
+};
+
+/**
+ * Get the KNS contract instance.
+ * @returns {Promise<MockERC20>} A promise that resolves to the KNS contract instance.
+ * @throws {Error} If the EVM_RPC_ADDRESS or EVM_PRIVATE_KEY environment variables are not set.
+ */
+export const getKNS = async (): Promise<MockERC20> => {
+  if (!providerAddress || !privateKey) {
+    throw new Error("EVM_RPC_ADDRESS and EVM_PRIVATE_KEY must be set");
+  }
+
+  const provider = new JsonRpcProvider(providerAddress);
+  const wallet = new Wallet(privateKey, provider);
+
+  const kns = MockERC20__factory.connect(knsAddress, wallet);
+  return kns;
+};
+
+/**
+ * Get the Katana contract instance.
+ * @returns {Promise<MockERC721>} A promise that resolves to the Katana contract instance.
+ * @throws {Error} If the EVM_RPC_ADDRESS or EVM_PRIVATE_KEY environment variables are not set.
+ */
+export const getKatana = async (): Promise<MockERC721> => {
+  if (!providerAddress || !privateKey) {
+    throw new Error("EVM_RPC_ADDRESS and EVM_PRIVATE_KEY must be set");
+  }
+
+  const provider = new JsonRpcProvider(providerAddress);
+  const wallet = new Wallet(privateKey, provider);
+
+  const katana = MockERC721__factory.connect(katanaAddress, wallet);
+  return katana;
+};
+
+/**
+ * Approve KNS tokens for staking.
+ * This function allows the manager contract to spend KNS tokens on behalf of the user.
+ * @param amount - The amount of KNS tokens to approve for staking.
+ * @returns {Promise<void>} A promise that resolves when the approval is complete.
+ * @throws {Error} If the amount is invalid or the approval transaction fails.
+ */
+export const approveKNS = async (amount: string): Promise<void> => {
+  const kns = await getKNS();
+  const stakeAmount = ethers.parseUnits(amount, 18);
+  const tx = await kns.approve(managerAddress, stakeAmount);
+  await tx.wait();
+  logger.info(`Approved ${amount} KNS for staking`);
+};
+
+/**
+ * Approve a Katana NFT for staking.
+ * This function allows the manager contract to stake the specified Katana NFT.
+ * @param tokenId - The ID of the Katana NFT to approve for staking.
+ * @returns {Promise<void>} A promise that resolves when the approval is complete.
+ * @throws {Error} If the token ID is invalid or the approval transaction fails.
+ */
+export const approveKatana = async (tokenId: number): Promise<void> => {
+  const katana = await getKatana();
+  const tx = await katana.approve(managerAddress, BigInt(tokenId));
+  await tx.wait();
+  logger.info(`Approved Katana NFT with ID ${tokenId} for staking`);
 };
 
 /**
@@ -75,7 +163,10 @@ export const stake = async (
   const stakeDuration = days * 24 * 60 * 60; // Convert days to seconds
   const params = { amount: stakeAmount, duration: stakeDuration };
 
+  await approveKNS(amount);
+
   if (nftId) {
+    await approveKatana(nftId);
     await sdk.stakeWithNft(manager, { ...params, nftId: BigInt(nftId) });
   } else {
     await sdk.stake(manager, params);
@@ -96,7 +187,6 @@ export const stake = async (
 export const unstake = async (): Promise<void> => {
   const manager = await getManager();
   await sdk.unstake(manager);
-
   logger.info("Successfully withdrew staked tokens");
 };
 
@@ -115,6 +205,17 @@ export const link = async (subnetId: string): Promise<void> => {
   }
 
   await sdk.link(linker, { to: subnet.publicKey });
-
   logger.info(`Successfully linked to subnet ${subnetId}`);
+};
+
+/**
+ * Get the link for a user.
+ * @param user - The user's EVM address.
+ * @returns {Promise<string>} A promise that resolves to the link for the user.
+ * @throws {Error} If the user address is invalid or the link retrieval fails.
+ */
+export const getLink = async (user: string): Promise<string> => {
+  const linker = await getLinker();
+  const link = await sdk.getLink(linker, user);
+  return link;
 };
