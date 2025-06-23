@@ -43,7 +43,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/$(echo "${{ github.repository }}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]'):latest
-            $(if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then \
-            echo ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]'):${GITHUB_REF#refs/tags/v}; \
-            fi)
+            ghcr.io/timeleaplabs/admin-subnet-plugin:latest
+            ${{ startsWith(github.ref, 'refs/tags/') && format('ghcr.io/timeleaplabs/admin-subnet-plugin:{0}', github.ref | replace('refs/tags/v', '')) || '' }}
