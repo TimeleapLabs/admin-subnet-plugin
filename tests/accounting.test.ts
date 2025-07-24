@@ -7,6 +7,7 @@ describe("Accounting transactions", () => {
   it("should credit a user's balance", async () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
+    const signature = new Uint8Array([4, 5, 6]);
     const amount = 100;
     const currency = "USD";
     const subnet = mockSubnet.subnet;
@@ -18,7 +19,7 @@ describe("Accounting transactions", () => {
       currency,
     };
 
-    await credit(creditTransaction, uuid, mockSubnet.delegates[0]);
+    await credit(creditTransaction, uuid, mockSubnet.delegates[0], signature);
 
     const { balance } = (await getUserBalance(user, currency, subnet)) ?? {
       balance: 0,
@@ -44,7 +45,12 @@ describe("Accounting transactions", () => {
       subnet,
     };
 
-    await debit(debitTransaction, uuid, mockSubnet.delegates[0]);
+    await debit(
+      debitTransaction,
+      uuid,
+      mockSubnet.delegates[0],
+      user.signature,
+    );
 
     const { balance } = (await getUserBalance(
       user.signer,
@@ -59,6 +65,7 @@ describe("Accounting transactions", () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
     const debit = new Uint8Array([1, 2, 3]);
+    const signature = new Uint8Array([4, 5, 6]);
     const subnet = mockSubnet.subnet;
     const amount = 50;
     const currency = "USD";
@@ -71,7 +78,7 @@ describe("Accounting transactions", () => {
       currency,
     };
 
-    await refund(refundTransaction, uuid, mockSubnet.delegates[0]);
+    await refund(refundTransaction, uuid, mockSubnet.delegates[0], signature);
 
     const { balance } = (await getUserBalance(user, currency, subnet)) ?? {
       balance: 0,
@@ -84,6 +91,7 @@ describe("Accounting transactions", () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
     const debit = new Uint8Array([1, 3, 3]);
+    const signature = new Uint8Array([4, 5, 6]);
     const amount = 50;
     const currency = "USD";
     const subnet = mockSubnet.subnet;
@@ -97,7 +105,7 @@ describe("Accounting transactions", () => {
     };
 
     await expect(
-      refund(refundTransaction, uuid, mockSubnet.delegates[0]),
+      refund(refundTransaction, uuid, mockSubnet.delegates[0], signature),
     ).rejects.toThrow("Debit transaction not found");
   });
 
@@ -105,6 +113,7 @@ describe("Accounting transactions", () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
     const debit = new Uint8Array([1, 2, 3]);
+    const signature = new Uint8Array([4, 5, 6]);
     const amount = 50;
     const currency = "EUR";
     const subnet = mockSubnet.subnet;
@@ -118,7 +127,7 @@ describe("Accounting transactions", () => {
     };
 
     await expect(
-      refund(refundTransaction, uuid, mockSubnet.delegates[0]),
+      refund(refundTransaction, uuid, mockSubnet.delegates[0], signature),
     ).rejects.toThrow("Debit transaction not found");
   });
 
@@ -126,6 +135,7 @@ describe("Accounting transactions", () => {
     const uuid = new Uint8Array([1, 2, 3]);
     const user = new Uint8Array([1, 2, 3]);
     const debit = new Uint8Array([1, 2, 3]);
+    const signature = new Uint8Array([4, 5, 6]);
     const subnet = mockSubnet.subnet;
     const amount = 105;
     const currency = "USD";
@@ -139,7 +149,7 @@ describe("Accounting transactions", () => {
     };
 
     await expect(
-      refund(refundTransaction, uuid, mockSubnet.delegates[0]),
+      refund(refundTransaction, uuid, mockSubnet.delegates[0], signature),
     ).rejects.toThrow("Debit transaction not found");
   });
 });

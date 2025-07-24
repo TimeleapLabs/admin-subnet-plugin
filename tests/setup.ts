@@ -15,6 +15,8 @@ export const mockSubnet: Subnet = {
 };
 
 beforeAll(async () => {
+  await new Promise((resolve) => setTimeout(resolve, 2000)); // 2s delay
+
   mongod = await MongoMemoryReplSet.create({ replSet: { count: 3 } });
   uri = mongod.getUri();
 

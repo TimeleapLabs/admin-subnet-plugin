@@ -1,7 +1,7 @@
 import { getClient } from "@lib/db.js";
 import { MongoClient } from "mongodb";
 
-import "./setup.ts";
+import "./setup.js";
 
 describe("MongoDB Connection", () => {
   it("should connect to MongoDB", async () => {

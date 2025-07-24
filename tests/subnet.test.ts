@@ -11,8 +11,10 @@ describe("Subnet administration", () => {
       user: new Uint8Array([3, 4, 5]),
       subnet: mockSubnet.subnet,
     };
+    const uuid = new Uint8Array([1, 2, 3]);
+    const signature = new Uint8Array([6, 7, 8]);
 
-    await authorize(authorizeRequest, mockSubnet.delegates[0]);
+    await authorize(authorizeRequest, uuid, mockSubnet.delegates[0], signature);
 
     const subnet = await getSubnet(mockSubnet.subnet);
     expect(subnet).toBeDefined();
@@ -29,8 +31,15 @@ describe("Subnet administration", () => {
       user: new Uint8Array([3, 4, 5]),
       subnet: mockSubnet.subnet,
     };
+    const uuid = new Uint8Array([1, 2, 3]);
+    const signature = new Uint8Array([6, 7, 8]);
 
-    await unauthorize(unauthorizeRequest, mockSubnet.delegates[0]);
+    await unauthorize(
+      unauthorizeRequest,
+      uuid,
+      mockSubnet.delegates[0],
+      signature,
+    );
 
     const updatedSubnet = await getSubnet(mockSubnet.subnet);
     expect(updatedSubnet).toBeDefined();
