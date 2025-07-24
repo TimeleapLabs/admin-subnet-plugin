@@ -54,6 +54,18 @@ schema Debit {
 }
 
 /**
+@dev A request to expire a user's balance.
+The `currency` field specifies the currency to expire,
+the `user` field is the user's identifier,
+and the `subnet` field is the identifier of the subnet.
+*/
+schema Expire {
+  currency  string8(encoding = "ascii")
+  user      byteN(length = 32)
+  subnet    byteN(length = 32)
+}
+
+/**
 @dev A request to update the subnet EVM address and
 re-fetch its stake from the blockchain.
 The `subnet` field is the identifier of the subnet,

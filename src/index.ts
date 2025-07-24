@@ -13,6 +13,7 @@ import {
   decodeAuthorize,
   decodeCredit,
   decodeDebit,
+  decodeExpire,
   decodeFunctionCall,
   decodeRefund,
   decodeUnAuthorize,
@@ -26,6 +27,7 @@ import {
   authorize,
   unauthorize,
   updateSubnet,
+  expire,
 } from "@lib/rpc.js";
 
 import type { ErrorType } from "./lib/errors.js";
@@ -92,46 +94,55 @@ wss.on("connection", (ws) => {
       return await sendError(ws, 404, uuid);
     }
 
+    const signature = buf.subarray(-64);
+
     try {
       switch (method) {
         case "credit": {
           const record = decodeCredit(sia);
-          await credit(record, uuid, sender.publicKey);
+          await credit(record, uuid, sender.publicKey, signature);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "debit": {
           const record = decodeDebit(sia);
-          await debit(record, uuid, sender.publicKey);
+          await debit(record, uuid, sender.publicKey, signature);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "refund": {
           const record = decodeRefund(sia);
-          await refund(record, uuid, sender.publicKey);
+          await refund(record, uuid, sender.publicKey, signature);
+          await sendSuccess(ws, uuid);
+          break;
+        }
+
+        case "expire": {
+          const record = decodeExpire(sia);
+          await expire(record, uuid, sender.publicKey, signature);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "updateSubnet": {
           const record = decodeUpdateSubnet(sia);
-          await updateSubnet(record, sender.publicKey);
+          await updateSubnet(record, uuid, sender.publicKey, signature);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "authorize": {
           const record = decodeAuthorize(sia);
-          await authorize(record, sender.publicKey);
+          await authorize(record, uuid, sender.publicKey, signature);
           await sendSuccess(ws, uuid);
           break;
         }
 
         case "unauthorize": {
           const record = decodeUnAuthorize(sia);
-          await unauthorize(record, sender.publicKey);
+          await unauthorize(record, uuid, sender.publicKey, signature);
           await sendSuccess(ws, uuid);
           break;
         }

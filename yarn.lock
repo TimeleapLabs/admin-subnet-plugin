@@ -1246,7 +1246,7 @@ __metadata:
     typescript-eslint: "npm:^8.32.1"
     ws: "npm:^8.18.2"
   bin:
-    tl-admin: dist/src/index.js
+    tl-admin: dist/src/cli.js
   languageName: unknown
   linkType: soft
 

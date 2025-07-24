@@ -1,11 +1,12 @@
-import { Auth, WithId } from "mongodb";
+import { WithId } from "mongodb";
 import type {
-  Signature,
+  Expire,
   Debit,
   Credit,
   Refund,
   Authorize,
   UnAuthorize,
+  UpdateSubnet,
 } from "@/model/admin.js";
 
 export type User = {
@@ -17,35 +18,41 @@ export type User = {
 
 export type UserDocument = WithId<User>;
 
-export interface DebitTransaction extends Debit {
+export interface Audited {
+  uuid: Uint8Array;
+  signer: Uint8Array;
+  signature: Uint8Array;
+  createdAt: Date;
+}
+
+export interface DebitTransaction extends Debit, Audited {
   type: "debit";
-  uuid: Uint8Array;
-  createdAt: Date;
 }
 
-export interface CreditTransaction extends Credit {
+export interface CreditTransaction extends Credit, Audited {
   type: "credit";
-  uuid: Uint8Array;
-  createdAt: Date;
 }
 
-export interface RefundTransaction extends Refund {
+export interface RefundTransaction extends Refund, Audited {
   type: "refund";
-  uuid: Uint8Array;
-  createdAt: Date;
+}
+
+export interface ExpireTransaction extends Expire, Audited {
+  type: "expire";
 }
 
 export type Transaction =
   | DebitTransaction
   | CreditTransaction
-  | RefundTransaction;
+  | RefundTransaction
+  | ExpireTransaction;
 
-export interface AuthorizeRequest extends Authorize {
+export interface AuthorizeRequest extends Authorize, Audited {
   type: "authorize";
   createdAt: Date;
 }
 
-export interface UnAuthorizeRequest extends UnAuthorize {
+export interface UnAuthorizeRequest extends UnAuthorize, Audited {
   type: "unauthorize";
   createdAt: Date;
 }
@@ -63,3 +70,5 @@ export type Subnet = {
 };
 
 export type SubnetDocument = WithId<Subnet>;
+
+export interface UpdateSubnetRecord extends UpdateSubnet, Audited {}

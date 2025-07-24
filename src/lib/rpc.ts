@@ -2,6 +2,7 @@ import {
   Authorize,
   Credit,
   Debit,
+  Expire,
   Refund,
   UnAuthorize,
   UpdateSubnet,
@@ -18,6 +19,9 @@ import {
   addAuthorizeDelegationRecord,
   addUnAuthorizeDelegationRecord,
   upsertSubnet,
+  addUpdateSubnetRecord,
+  resetUserBalance,
+  recordExpire,
 } from "@lib/db.js";
 import { checkSigner } from "@lib/check.js";
 import { getLink } from "./blockchain.js";
@@ -36,6 +40,7 @@ export const credit = async (
   credit: Credit,
   uuid: Uint8Array,
   signer: Uint8Array,
+  signature: Uint8Array,
 ) => {
   const client = await getClient();
   const session = client.startSession();
@@ -52,7 +57,7 @@ export const credit = async (
         session,
       );
 
-      await recordCredit(credit, uuid, session);
+      await recordCredit(credit, uuid, signer, signature, session);
     });
   } finally {
     session.endSession();
@@ -73,6 +78,7 @@ export const debit = async (
   debit: Debit,
   uuid: Uint8Array,
   signer: Uint8Array,
+  signature: Uint8Array,
 ) => {
   const client = await getClient();
   const session = client.startSession();
@@ -89,7 +95,44 @@ export const debit = async (
         session,
       );
 
-      await recordDebit(debit, uuid, session);
+      await recordDebit(debit, uuid, signer, signature, session);
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+/**
+ * @description Debit user balance
+ * @param expire Expire transaction
+ * @param uuid Unique identifier for the transaction
+ * @param signer Signer of the expire request
+ * @notes This function is used to expire a user's balance in the database.
+ *        It uses a MongoDB transaction to ensure that both the balance update
+ *        and the transaction record are atomic. If either operation fails,
+ *        the entire transaction is rolled back.
+ */
+export const expire = async (
+  expire: Expire,
+  uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
+) => {
+  const client = await getClient();
+  const session = client.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      await checkSigner(expire.subnet, signer, session);
+
+      await resetUserBalance(
+        expire.user,
+        expire.currency,
+        expire.subnet,
+        session,
+      );
+
+      await recordExpire(expire, uuid, signer, signature, session);
     });
   } finally {
     session.endSession();
@@ -110,6 +153,7 @@ export const refund = async (
   refund: Refund,
   uuid: Uint8Array,
   signer: Uint8Array,
+  signature: Uint8Array,
 ) => {
   const client = await getClient();
   const session = client.startSession();
@@ -117,7 +161,7 @@ export const refund = async (
   try {
     await session.withTransaction(async () => {
       await checkSigner(refund.subnet, signer, session);
-      await safeRecordRefund(refund, uuid, session);
+      await safeRecordRefund(refund, uuid, signer, signature, session);
 
       await incUserBalance(
         refund.user,
@@ -139,7 +183,12 @@ export const refund = async (
  * @notes This function is used to authorize a user for a specific subnet.
  *        It adds a delegation entry in the database.
  */
-export const authorize = async (request: Authorize, signer: Uint8Array) => {
+export const authorize = async (
+  request: Authorize,
+  uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
+) => {
   const client = await getClient();
   const session = client.startSession();
 
@@ -147,7 +196,13 @@ export const authorize = async (request: Authorize, signer: Uint8Array) => {
     await session.withTransaction(async () => {
       await checkSigner(request.subnet, signer, session);
       await addDelegateToSubnet(request.subnet, request.user, session);
-      await addAuthorizeDelegationRecord(request, session);
+      await addAuthorizeDelegationRecord(
+        request,
+        uuid,
+        signer,
+        signature,
+        session,
+      );
     });
   } finally {
     session.endSession();
@@ -163,7 +218,9 @@ export const authorize = async (request: Authorize, signer: Uint8Array) => {
  */
 export const unauthorize = async (
   unauthorize: UnAuthorize,
+  uuid: Uint8Array,
   signer: Uint8Array,
+  signature: Uint8Array,
 ) => {
   const client = await getClient();
   const session = client.startSession();
@@ -176,7 +233,13 @@ export const unauthorize = async (
         unauthorize.user,
         session,
       );
-      await addUnAuthorizeDelegationRecord(unauthorize, session);
+      await addUnAuthorizeDelegationRecord(
+        unauthorize,
+        uuid,
+        signer,
+        signature,
+        session,
+      );
     });
   } finally {
     session.endSession();
@@ -192,7 +255,9 @@ export const unauthorize = async (
  */
 export const updateSubnet = async (
   updateSubnet: UpdateSubnet,
+  uuid: Uint8Array,
   signer: Uint8Array,
+  signature: Uint8Array,
 ) => {
   const user = "0x" + Buffer.from(updateSubnet.stakeUser).toString("hex");
   const link = await getLink(user);
@@ -201,6 +266,21 @@ export const updateSubnet = async (
     throw new Error("Invalid subnet link");
   }
 
-  // No need for a transaction here as we are only updating the subnet
-  await upsertSubnet(updateSubnet, signer);
+  const client = await getClient();
+  const session = client.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      await addUpdateSubnetRecord(
+        updateSubnet,
+        uuid,
+        signer,
+        signature,
+        session,
+      );
+      await upsertSubnet(updateSubnet, signer);
+    });
+  } finally {
+    session.endSession();
+  }
 };

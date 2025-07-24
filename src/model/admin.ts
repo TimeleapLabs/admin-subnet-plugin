@@ -112,6 +112,27 @@ export function decodeDebit(sia: Sia): Debit {
   };
 }
 
+export interface Expire {
+  currency: string;
+  user: Uint8Array | Buffer;
+  subnet: Uint8Array | Buffer;
+}
+
+export function encodeExpire(sia: Sia, expire: Expire): Sia {
+  sia.addString8(expire.currency);
+  sia.addByteArrayN(expire.user);
+  sia.addByteArrayN(expire.subnet);
+  return sia;
+}
+
+export function decodeExpire(sia: Sia): Expire {
+  return {
+    currency: sia.readString8(),
+    user: sia.readByteArrayN(32),
+    subnet: sia.readByteArrayN(32),
+  };
+}
+
 export interface UpdateSubnet {
   subnet: Uint8Array | Buffer;
   stakeUser: Uint8Array | Buffer;

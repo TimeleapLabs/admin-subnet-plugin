@@ -16,13 +16,15 @@ import type {
   Transaction,
   SubnetDocument,
   Subnet,
+  UpdateSubnetRecord,
+  ExpireTransaction,
 } from "@type/db.js";
 import type {
   Authorize,
   Credit,
   Debit,
+  Expire,
   Refund,
-  Signature,
   UnAuthorize,
   UpdateSubnet,
 } from "@/model/admin.js";
@@ -103,6 +105,29 @@ export const incUserBalance = async (
 };
 
 /**
+ * @description Increment user balance
+ * @param user User public key
+ * @param currency Currency name
+ * @param subnet Subnet name
+ * @param session MongoDB session (optional)
+ * @returns Update result
+ */
+export const resetUserBalance = async (
+  user: Uint8Array,
+  currency: string,
+  subnet: Uint8Array,
+  session: Maybe<ClientSession> = undefined,
+): Promise<UpdateResult<User>> => {
+  const db = await getDb();
+  const collection = db.collection<User>("users");
+  return await collection.updateOne(
+    { user, currency, subnet },
+    { $set: { balance: 0 } },
+    { upsert: true, session },
+  );
+};
+
+/**
  * @description Decrement user balance
  * @param user User public key
  * @param currency Currency name
@@ -148,12 +173,21 @@ export const safeDecUserBalance = async (
 export const recordCredit = async (
   credit: Credit,
   uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
   session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<CreditTransaction>> => {
   const db = await getDb();
   const collection = db.collection<CreditTransaction>("transactions");
   return await collection.insertOne(
-    { ...credit, uuid, type: "credit", createdAt: new Date() },
+    {
+      ...credit,
+      uuid,
+      signer,
+      signature,
+      type: "credit",
+      createdAt: new Date(),
+    },
     { session },
   );
 };
@@ -167,12 +201,42 @@ export const recordCredit = async (
 export const recordDebit = async (
   debit: Debit,
   uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
   session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<DebitTransaction>> => {
   const db = await getDb();
   const collection = db.collection<DebitTransaction>("transactions");
   return await collection.insertOne(
-    { ...debit, uuid, type: "debit", createdAt: new Date() },
+    { ...debit, uuid, signer, signature, type: "debit", createdAt: new Date() },
+    { session },
+  );
+};
+
+/**
+ * @description Record a debit transaction
+ * @param expire Expire transaction
+ * @param session MongoDB session (optional)
+ * @returns Insert result
+ */
+export const recordExpire = async (
+  expire: Expire,
+  uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
+  session: Maybe<ClientSession> = undefined,
+): Promise<InsertOneResult<ExpireTransaction>> => {
+  const db = await getDb();
+  const collection = db.collection<ExpireTransaction>("transactions");
+  return await collection.insertOne(
+    {
+      ...expire,
+      uuid,
+      signer,
+      signature,
+      type: "expire",
+      createdAt: new Date(),
+    },
     { session },
   );
 };
@@ -187,6 +251,8 @@ export const recordDebit = async (
 export const safeRecordRefund = async (
   refund: Refund,
   uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
   session: Maybe<ClientSession> = undefined,
   check: boolean = true,
 ): Promise<InsertOneResult<RefundTransaction>> => {
@@ -209,7 +275,14 @@ export const safeRecordRefund = async (
   }
 
   return await collection.insertOne(
-    { ...refund, uuid, type: "refund", createdAt: new Date() },
+    {
+      ...refund,
+      uuid,
+      signer,
+      signature,
+      type: "refund",
+      createdAt: new Date(),
+    },
     { session },
   );
 };
@@ -239,12 +312,22 @@ export const getDelegation = async (
  */
 export const addAuthorizeDelegationRecord = async (
   authorize: Authorize,
+  uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
   session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<Delegate>> => {
   const db = await getDb();
   const collection = db.collection<Delegate>("delegations");
   return await collection.insertOne(
-    { ...authorize, type: "authorize", createdAt: new Date() },
+    {
+      ...authorize,
+      uuid,
+      signer,
+      signature,
+      type: "authorize",
+      createdAt: new Date(),
+    },
     { session },
   );
 };
@@ -257,12 +340,49 @@ export const addAuthorizeDelegationRecord = async (
  */
 export const addUnAuthorizeDelegationRecord = async (
   unauthorize: UnAuthorize,
+  uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
   session: Maybe<ClientSession> = undefined,
 ): Promise<InsertOneResult<Delegate>> => {
   const db = await getDb();
   const collection = db.collection<Delegate>("delegations");
   return await collection.insertOne(
-    { ...unauthorize, type: "unauthorize", createdAt: new Date() },
+    {
+      ...unauthorize,
+      uuid,
+      signer,
+      signature,
+      type: "unauthorize",
+      createdAt: new Date(),
+    },
+    { session },
+  );
+};
+
+/**
+ * @description Remove a delegation
+ * @param unauthorize UnAuthorize transaction
+ * @param session MongoDB session (optional)
+ * @returns Delete result
+ */
+export const addUpdateSubnetRecord = async (
+  updateSubnet: UpdateSubnet,
+  uuid: Uint8Array,
+  signer: Uint8Array,
+  signature: Uint8Array,
+  session: Maybe<ClientSession> = undefined,
+): Promise<InsertOneResult<UpdateSubnetRecord>> => {
+  const db = await getDb();
+  const collection = db.collection<UpdateSubnetRecord>("updateSubnets");
+  return await collection.insertOne(
+    {
+      ...updateSubnet,
+      uuid,
+      signer,
+      signature,
+      createdAt: new Date(),
+    },
     { session },
   );
 };
