@@ -53,6 +53,12 @@
     "node": ">=22.0.0",
     "yarn": ">=4.0.0"
   },
+  "exports": {
+    "./cli": {
+      "import": "./dist/src/cli.js",
+      "types": "./dist/src/cli.d.ts"
+    }
+  },
   "bin": {
     "tl-admin": "dist/src/cli.js"
   }
