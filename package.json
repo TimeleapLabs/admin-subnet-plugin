@@ -54,9 +54,9 @@
     "yarn": ">=4.0.0"
   },
   "exports": {
-    "./cli": {
-      "import": "./dist/src/cli.js",
-      "types": "./dist/src/cli.d.ts"
+    "./cmd": {
+      "import": "./dist/src/cmd/handler.js",
+      "types": "./dist/src/cmd/handler.d.ts"
     }
   },
   "bin": {
