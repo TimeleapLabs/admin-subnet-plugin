@@ -37,6 +37,8 @@
     "typescript-eslint": "^8.32.1"
   },
   "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "scripts": {
     "sia": "sia compile src/model/admin.sia -o src/model/admin.ts",
     "build": "yarn sia && tsc && tsc-alias",
@@ -54,12 +56,12 @@
     "yarn": ">=4.0.0"
   },
   "exports": {
-    "./cmd": {
-      "import": "./dist/src/cmd/handler.js",
-      "types": "./dist/src/cmd/handler.d.ts"
-    }
+    ".": "./"
   },
   "bin": {
     "tl-admin": "dist/src/cli.js"
-  }
+  },
+  "files": [
+    "dist/src"
+  ]
 }
